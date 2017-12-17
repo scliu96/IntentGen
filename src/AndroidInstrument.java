@@ -1,17 +1,22 @@
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import soot.*;
-import soot.jimple.AbstractStmtSwitch;
-import soot.jimple.AssignStmt;
-import soot.jimple.IfStmt;
-import soot.jimple.InvokeExpr;
-import soot.jimple.internal.JimpleLocalBox;
+import soot.Body;
+import soot.BodyTransformer;
+import soot.PackManager;
+import soot.PatchingChain;
+import soot.Scene;
+import soot.SootClass;
+import soot.SootMethod;
+import soot.Transform;
+import soot.Unit;
+import soot.ValueBox;
+import soot.jimple.infoflow.android.SetupApplication;
+import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.options.Options;
 import soot.toolkits.graph.DirectedGraph;
 import soot.toolkits.graph.ExceptionalUnitGraph;
@@ -22,27 +27,38 @@ import soot.util.cfgcmd.CFGToDotGraph;
 import soot.util.dot.DotGraph;
 
 
-
 public class AndroidInstrument{
-	public final static String sootJarPath="/Users/apple/Documents/Soot/sootclasses-trunk.jar";
+	public final static String sootJarPath="/Users/apple/Documents/Soot/FlowDroid/sootclasses-trunk-jar-with-dependencies.jar";
 	public final static String androidJarPath="/Users/apple/Documents/Soot/android-platforms-master";
 	public final static String APKPath="/Users/apple/Documents/Android/Projects/MyApplication/app/build/outputs/apk/app-release-unaligned.apk";
 	//public final static String rtJarPath="/Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/jre/lib/rt.jar";
 	
 	public static void initSoot(String[] args){
 		Options.v().set_src_prec(Options.src_prec_apk);
-		Options.v().set_output_format(Options.output_format_dex);
 		Options.v().set_android_jars(androidJarPath);
 		Options.v().set_process_dir(Collections.singletonList(APKPath));
+		Options.v().set_output_format(Options.output_format_none);
+		//Options.v().set_whole_program(true);
 		Options.v().set_allow_phantom_refs(true);
+		//Options.v().setPhaseOption("cg.spark", "on");
+		//Options.v().setPhaseOption("cg.spark", "rta:true");
+		//Options.v().setPhaseOption("cg.spark", "on-fly-cg:false");
 		Scene.v().loadNecessaryClasses();
 	}
 	
 	public static void main(String[] args) {
+		//SetupApplication app = new SetupApplication(androidJarPath, APKPath);
+		//soot.G.reset();
+		SetupApplication analyzer = new SetupApplication(androidJarPath, APKPath);
+		analyzer.constructCallgraph();
+		
 		initSoot(args);
         PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter",new MyTransform()));
         PackManager.v().runPacks();
-        Scene.v().getCallGraph();
+        
+        //CallGraph cg = Scene.v().getCallGraph();
+        //SootMethod entryPoint = app.
+        
         return;
 	}
 }
@@ -52,6 +68,7 @@ class MyTransform extends BodyTransformer{
 	@Override
 	protected void internalTransform(final Body b,String phaseName,final Map<String,String> options) {
 		// TODO Auto-generated method stub
+		/*
 		SootClass sClass = b.getMethod().getDeclaringClass();
 		if(sClass.getName().equals("com.vogella.android.myapplication.MyService")){
 			SootMethod m = b.getMethod();
@@ -106,7 +123,7 @@ class MyTransform extends BodyTransformer{
 				}
 				System.out.println("zzz");
 			}
-		}
+		}*/
 	}
 	/*
 	public void createCallGraph(Body b,final Map<String,String> options){
