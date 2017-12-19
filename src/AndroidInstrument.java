@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import flowdroidCG.CGExporter;
+import flowdroidCG.CGGenerator;
 import soot.Body;
 import soot.BodyTransformer;
 import soot.PackManager;
@@ -26,20 +28,22 @@ import soot.util.cfgcmd.CFGGraphType;
 import soot.util.cfgcmd.CFGToDotGraph;
 import soot.util.dot.DotGraph;
 
-
 public class AndroidInstrument{
 	public final static String sootJarPath="/Users/apple/Documents/Soot/FlowDroid/sootclasses-trunk-jar-with-dependencies.jar";
 	public final static String androidJarPath="/Users/apple/Documents/Soot/android-platforms-master";
 	public final static String APKPath="/Users/apple/Documents/Android/Projects/MyApplication/app/build/outputs/apk/app-release-unaligned.apk";
 	//public final static String rtJarPath="/Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/jre/lib/rt.jar";
+	private static CGGenerator cgg = new CGGenerator();
 	
 	public static void initSoot(String[] args){
 		Options.v().set_src_prec(Options.src_prec_apk);
 		Options.v().set_android_jars(androidJarPath);
 		Options.v().set_process_dir(Collections.singletonList(APKPath));
 		Options.v().set_output_format(Options.output_format_none);
-		//Options.v().set_whole_program(true);
 		Options.v().set_allow_phantom_refs(true);
+		
+		Options.v().set_whole_program(true);
+		Options.v().setPhaseOption("cg.spark verbose:true", "on");
 		//Options.v().setPhaseOption("cg.spark", "on");
 		//Options.v().setPhaseOption("cg.spark", "rta:true");
 		//Options.v().setPhaseOption("cg.spark", "on-fly-cg:false");
@@ -47,34 +51,36 @@ public class AndroidInstrument{
 	}
 	
 	public static void main(String[] args) {
-		//SetupApplication app = new SetupApplication(androidJarPath, APKPath);
-		//soot.G.reset();
-		SetupApplication analyzer = new SetupApplication(androidJarPath, APKPath);
-		analyzer.constructCallgraph();
+		SetupApplication app = new SetupApplication(androidJarPath, APKPath);
+		//app.constructCallgraph();
+		soot.G.reset();
 		
 		initSoot(args);
-        PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter",new MyTransform()));
+		MyTransform mytrans = new MyTransform();
+        PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter",mytrans));
         PackManager.v().runPacks();
         
-        //CallGraph cg = Scene.v().getCallGraph();
-        //SootMethod entryPoint = app.
+        CallGraph cg = Scene.v().getCallGraph();
+        //SootMethod entryPoint = app.getDummyMainMethod();
+        CGGenerator.visit(cg, mytrans.entryPoint);
+        //CGGenerator.cge.exportMIG("zzz.gexf", "/Users/apple/Desktop");
         
         return;
 	}
 }
 
 class MyTransform extends BodyTransformer{
-	
+	public static SootMethod entryPoint;
 	@Override
 	protected void internalTransform(final Body b,String phaseName,final Map<String,String> options) {
 		// TODO Auto-generated method stub
-		/*
+		
 		SootClass sClass = b.getMethod().getDeclaringClass();
 		if(sClass.getName().equals("com.vogella.android.myapplication.MyService")){
 			SootMethod m = b.getMethod();
 			if((m.getName().equals("onStartCommand"))||(m.getName().equals("onBind"))){
 				System.out.println(b.toString());
-				
+				entryPoint = m;
 				List<ValueBox> intent = new ArrayList<ValueBox>();
 				List<ValueBox> bundle = new ArrayList<ValueBox>();
 				List<ValueBox> rel = new ArrayList<ValueBox>();
@@ -123,7 +129,7 @@ class MyTransform extends BodyTransformer{
 				}
 				System.out.println("zzz");
 			}
-		}*/
+		}
 	}
 	/*
 	public void createCallGraph(Body b,final Map<String,String> options){
