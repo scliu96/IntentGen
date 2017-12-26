@@ -5,9 +5,5 @@
 	<classpathentry kind="lib" path="/Users/apple/Documents/Soot/FlowDroid/sootclasses-trunk-jar-with-dependencies.jar"/>
 	<classpathentry kind="lib" path="/Users/apple/Documents/Soot/FlowDroid/soot-infoflow.jar"/>
 	<classpathentry kind="lib" path="/Users/apple/Documents/Soot/FlowDroid/soot-infoflow-android.jar"/>
-	<classpathentry kind="lib" path="/Users/apple/Documents/Soot/android-call-graph/AXMLPrinter2.jar"/>
-	<classpathentry kind="lib" path="/Users/apple/Documents/Soot/android-call-graph/gexf4j-0.4.4-BETA.jar"/>
-	<classpathentry kind="lib" path="/Users/apple/Documents/Soot/android-call-graph/stax2-api-3.1.1.jar"/>
-	<classpathentry kind="lib" path="/Users/apple/Documents/Soot/android-call-graph/woodstox-core-asl-4.0.6.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
