@@ -7,20 +7,20 @@ import soot.MethodOrMethodContext;
 import soot.SootMethod;
 import soot.Type;
 import soot.jimple.toolkits.callgraph.CallGraph;
+import soot.jimple.toolkits.callgraph.Edge;
 import soot.jimple.toolkits.callgraph.Targets;
 
 public class CGGenerator {
-	//private static Map<String,Boolean> visited = new HashMap<String,Boolean>();
-    private static int count = 0;
-    
+	
 	public static void visit(CallGraph cg,SootMethod m){
-		count++;
-        String identifier = m.getSignature();
-        for(int i = 0;i < count; i++)
-        	System.out.print(" ");
-        System.out.println(identifier);
-        
-        Iterator<MethodOrMethodContext> ctargets = new Targets(cg.edgesOutOf(m));
+		CallGraph myCall = new CallGraph();
+		System.out.println(m.getSignature());
+		Iterator<Edge> outEdges = cg.edgesOutOf(m);
+		if(outEdges != null)
+			while(outEdges.hasNext()){
+				
+			}
+        Iterator<MethodOrMethodContext> ctargets = new Targets(outEdges);
         if(ctargets != null){
             while(ctargets.hasNext()){
                 SootMethod c = (SootMethod) ctargets.next();
@@ -28,11 +28,12 @@ public class CGGenerator {
                     System.out.println("c is null");
                 List<Type> para = c.getParameterTypes();
                 for(int i = 0;i < para.size(); i++){
-                	if((para.get(i).toString().equals("android.content.Intent"))||(para.get(i).toString().equals("android.os.Bundle")))
+                	if((para.get(i).toString().equals("android.content.Intent"))||(para.get(i).toString().equals("android.os.Bundle"))){
+                		
                 		visit(cg,c);
+                	}
                 }
             }
         }
-        count--;
     }
 }

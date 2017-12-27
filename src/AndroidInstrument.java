@@ -39,12 +39,12 @@ public class AndroidInstrument{
         List<SootMethod> entryPoints = mysearch.entryPoints;
         for(int i = 0; i < entryPoints.size(); i++)
         	CGGenerator.visit(cg, entryPoints.get(i));
-        
+        /*
         RunTransformer myrun = new RunTransformer();
         myrun.setEntryPoints(entryPoints);
         PackManager.v().getPack("jtp").remove("jtp.myInstrumenter");
         PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter",myrun));
-        PackManager.v().runPacks();
+        PackManager.v().runPacks();*/
         
         return;
 	}
