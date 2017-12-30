@@ -12,28 +12,40 @@ import soot.jimple.toolkits.callgraph.Targets;
 
 public class CGGenerator {
 	
-	public static void visit(CallGraph cg,SootMethod m){
+	public static CallGraph visit(CallGraph cg,SootMethod m){
 		CallGraph myCall = new CallGraph();
 		System.out.println(m.getSignature());
 		Iterator<Edge> outEdges = cg.edgesOutOf(m);
 		if(outEdges != null)
 			while(outEdges.hasNext()){
-				
-			}
-        Iterator<MethodOrMethodContext> ctargets = new Targets(outEdges);
-        if(ctargets != null){
-            while(ctargets.hasNext()){
-                SootMethod c = (SootMethod) ctargets.next();
-                if(c == null)
-                    System.out.println("c is null");
-                List<Type> para = c.getParameterTypes();
+				Edge e = outEdges.next();
+				SootMethod c = (SootMethod) e.getTgt();
+				List<Type> para = c.getParameterTypes();
                 for(int i = 0;i < para.size(); i++){
                 	if((para.get(i).toString().equals("android.content.Intent"))||(para.get(i).toString().equals("android.os.Bundle"))){
-                		
-                		visit(cg,c);
+                		myCall.addEdge(e);
+                		mergeCallGraph(myCall,visit(cg,c));
                 	}
                 }
-            }
-        }
+			}
+		return myCall;
+        //Iterator<MethodOrMethodContext> ctargets = new Targets(outEdges);
     }
+	
+	private static void mergeCallGraph(CallGraph cgMain, CallGraph cgSub){
+		if(cgSub.size() == 0)
+			return;
+		
+		Iterator<MethodOrMethodContext> allSource = cgSub.sourceMethods();
+		if(allSource != null)
+			while(allSource.hasNext()){
+				MethodOrMethodContext m = allSource.next();
+				Iterator<Edge> outEdges = cgSub.edgesOutOf(m);
+				if(outEdges != null)
+					while(outEdges.hasNext()){
+						Edge e = outEdges.next();
+						cgMain.addEdge(e);
+					}
+			}
+	}
 }
