@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -9,19 +10,22 @@ import soot.PatchingChain;
 import soot.SootMethod;
 import soot.Unit;
 import soot.ValueBox;
+import soot.jimple.toolkits.callgraph.CallGraph;
 
 public class RunTransformer extends BodyTransformer{
-	protected static List<SootMethod> entryPoints;
+	protected static List<CallGraph> entryGraphs = new LinkedList<CallGraph>();
+	protected static List<SootMethod> Points = new LinkedList<SootMethod>();
 	
-	public void setEntryPoints(List<SootMethod> entry){
-		RunTransformer.entryPoints = entry;
+	public void init(List<CallGraph> call, List<SootMethod> entry){
+		RunTransformer.entryGraphs = call;
+		RunTransformer.Points = entry;
 	}
 	
 	@Override
 	protected void internalTransform(final Body b,String phaseName,final Map<String,String> options) {
 		// TODO Auto-generated method stub
 		
-		if(entryPoints.contains(b.getMethod())){
+		if(Points.contains(b.getMethod())){
 			System.out.println(b.getMethod().toString());
 			List<ValueBox> intent = new ArrayList<ValueBox>();
 			List<ValueBox> bundle = new ArrayList<ValueBox>();

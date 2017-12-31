@@ -8,6 +8,7 @@ import soot.SootMethod;
 
 public class SearchTransformer extends BodyTransformer{
 	protected List<SootMethod> entryPoints = new LinkedList<SootMethod>();
+	
 	@Override
 	protected void internalTransform(final Body b,String phaseName,final Map<String,String> options){
 		if(b.getMethod().getDeclaringClass().hasSuperclass())

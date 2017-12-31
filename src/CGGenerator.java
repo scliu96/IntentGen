@@ -1,20 +1,26 @@
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import soot.MethodOrMethodContext;
 import soot.SootMethod;
 import soot.Type;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
-import soot.jimple.toolkits.callgraph.Targets;
 
 public class CGGenerator {
+	public static List<CallGraph> entryGraphs = new LinkedList<CallGraph>();
+	public static List<SootMethod> Points = new LinkedList<SootMethod>();
 	
-	public static CallGraph visit(CallGraph cg,SootMethod m){
+	public void getCallGraph(CallGraph cg, List<SootMethod> entryPoints){
+		Points = entryPoints;
+		for(int i = 0; i < entryPoints.size(); i++)
+			entryGraphs.add(visit(cg, entryPoints.get(i)));
+	}
+	
+	private static CallGraph visit(CallGraph cg, SootMethod m){
 		CallGraph myCall = new CallGraph();
-		System.out.println(m.getSignature());
+		//System.out.println(m.getSignature());
 		Iterator<Edge> outEdges = cg.edgesOutOf(m);
 		if(outEdges != null)
 			while(outEdges.hasNext()){
@@ -24,6 +30,7 @@ public class CGGenerator {
                 for(int i = 0;i < para.size(); i++){
                 	if((para.get(i).toString().equals("android.content.Intent"))||(para.get(i).toString().equals("android.os.Bundle"))){
                 		myCall.addEdge(e);
+                		Points.add(c);
                 		mergeCallGraph(myCall,visit(cg,c));
                 	}
                 }

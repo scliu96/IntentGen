@@ -22,7 +22,7 @@ public class AndroidInstrument{
 		Options.v().set_allow_phantom_refs(true);
 		
 		Options.v().set_whole_program(true);
-		Options.v().setPhaseOption("cg.spark verbose:true", "on");
+		//Options.v().setPhaseOption("cg.spark verbose:true", "on");
 		//Options.v().setPhaseOption("cg.spark", "on");
 		//Options.v().setPhaseOption("cg.spark", "rta:true");
 		//Options.v().setPhaseOption("cg.spark", "on-fly-cg:false");
@@ -36,15 +36,13 @@ public class AndroidInstrument{
         PackManager.v().runPacks();
         
         CallGraph cg = Scene.v().getCallGraph();
-        List<SootMethod> entryPoints = mysearch.entryPoints;
-        for(int i = 0; i < entryPoints.size(); i++)
-        	CGGenerator.visit(cg, entryPoints.get(i));
-        /*
+        cgg.getCallGraph(cg, mysearch.entryPoints);
+        
         RunTransformer myrun = new RunTransformer();
-        myrun.setEntryPoints(entryPoints);
+        myrun.init(CGGenerator.entryGraphs, CGGenerator.Points);
         PackManager.v().getPack("jtp").remove("jtp.myInstrumenter");
         PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter",myrun));
-        PackManager.v().runPacks();*/
+        PackManager.v().runPacks();
         
         return;
 	}
