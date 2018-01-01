@@ -18,6 +18,24 @@ public class CGGenerator {
 			entryGraphs.add(visit(cg, entryPoints.get(i)));
 	}
 	
+	public void printPoints(){
+		Iterator<SootMethod> it = Points.iterator();
+		if(it != null)
+			while(it.hasNext()){
+				SootMethod point = it.next();
+				System.out.println(point.toString());
+			}
+	}
+	
+	public void printGraphs(){
+		Iterator<CallGraph> it = entryGraphs.iterator();
+		if(it != null)
+			while(it.hasNext()){
+				CallGraph cg = it.next();
+				System.out.println(cg.size());
+			}
+	}
+	
 	private static CallGraph visit(CallGraph cg, SootMethod m){
 		CallGraph myCall = new CallGraph();
 		//System.out.println(m.getSignature());
