@@ -26,54 +26,10 @@ public class RunTransformer extends BodyTransformer{
 		// TODO Auto-generated method stub
 		
 		if(Points.contains(b.getMethod())){
-			System.out.println(b.getMethod().toString());
-			List<ValueBox> intent = new ArrayList<ValueBox>();
-			List<ValueBox> bundle = new ArrayList<ValueBox>();
-			List<ValueBox> rel = new ArrayList<ValueBox>();
-			for(ValueBox v : b.getDefBoxes()){
-				if(v.getValue().getType().toString().equals("android.content.Intent")){
-					intent.add(v);
-					break;
-				}
-			}
-			
-			PatchingChain<Unit> units = b.getUnits();
-			for(Iterator<Unit> iter = units.snapshotIterator(); iter.hasNext();){
-				final Unit u = iter.next();
-				for(ValueBox v1 : u.getUseBoxes()){
-					for(ValueBox v2 : intent)
-						if(v2.getValue().equals(v1.getValue())){
-							for(ValueBox v : u.getDefBoxes())
-								if(v.getValue().getType().toString().equals("android.os.Bundle"))
-									bundle.add(v);
-							break;
-						}
-					for(ValueBox v2 : bundle)
-						if(v2.getValue().equals(v1.getValue())){
-							for(ValueBox v : u.getDefBoxes())
-								if(v.getValue().getType().toString().equals("android.os.Bundle"))
-									bundle.add(v);
-								else rel.add(v);
-							break;
-						}
-				}
-			}
-			System.out.println("intent:");
-			for(ValueBox v : intent){
-				System.out.print(v.getValue()+" ");
-				System.out.println(v.getValue().getType());
-			}
-			System.out.println("bundle:");
-			for(ValueBox v : bundle){
-				System.out.print(v.getValue()+" ");
-				System.out.println(v.getValue().getType());
-			}
-			System.out.println("rel:");
-			for(ValueBox v : rel){
-				System.out.print(v.getValue()+" ");
-				System.out.println(v.getValue().getType());
-			}
-			System.out.println("zzz");
+			//System.out.println(b.getMethod().toString());
+			RelateValue rv = new RelateValue(b.getMethod());
+			rv.updateValue(b);
+			rv.print();
 		}
 	}
 	
