@@ -43,10 +43,17 @@ public class CGGenerator {
 		if(outEdges != null)
 			while(outEdges.hasNext()){
 				Edge e = outEdges.next();
+				
 				SootMethod c = (SootMethod) e.getTgt();
 				List<Type> para = c.getParameterTypes();
                 for(int i = 0;i < para.size(); i++){
                 	if((para.get(i).toString().equals("android.content.Intent"))||(para.get(i).toString().equals("android.os.Bundle"))){
+                		
+                		//System.out.println(e.src());
+        				//System.out.println(e.srcStmt());
+        				//System.out.println(e.tgt());
+        				System.out.println(e.tgt().getActiveBody().toString());
+                		
                 		myCall.addEdge(e);
                 		Points.add(c);
                 		mergeCallGraph(myCall,visit(cg,c));

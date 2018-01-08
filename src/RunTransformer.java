@@ -27,8 +27,7 @@ public class RunTransformer extends BodyTransformer{
 		
 		if(Points.contains(b.getMethod())){
 			//System.out.println(b.getMethod().toString());
-			RelateValue rv = new RelateValue(b.getMethod());
-			rv.updateValue(b);
+			RelateValue rv = new RelateValue(b);
 			rv.print();
 		}
 	}

@@ -10,7 +10,7 @@ import soot.options.Options;
 public class AndroidInstrument{
 	public final static String sootJarPath="/Users/apple/Documents/Soot/FlowDroid/sootclasses-trunk-jar-with-dependencies.jar";
 	public final static String androidJarPath="/Users/apple/Documents/Soot/android-platforms-master";
-	public final static String APKPath="/Users/apple/Documents/Android/Projects/MyApplication/app/build/outputs/apk/app-release-unaligned.apk";
+	public final static String APKPath="/Users/apple/Documents/Android/version_2.apk";
 	//public final static String rtJarPath="/Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/jre/lib/rt.jar";
 	private static CGGenerator cgg = new CGGenerator();
 	
@@ -36,6 +36,7 @@ public class AndroidInstrument{
         PackManager.v().runPacks();
         
         CallGraph cg = Scene.v().getCallGraph();
+        cg
         cgg.getCallGraph(cg, mysearch.entryPoints);
         
         RunTransformer myrun = new RunTransformer();
