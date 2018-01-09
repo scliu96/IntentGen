@@ -7,23 +7,29 @@ import soot.BodyTransformer;
 import soot.SootMethod;
 
 public class SearchTransformer extends BodyTransformer{
-	protected List<SootMethod> entryPoints = new LinkedList<SootMethod>();
+	private List<SootMethod> entryPoints = new LinkedList<SootMethod>();
 	
 	@Override
 	protected void internalTransform(final Body b,String phaseName,final Map<String,String> options){
-		if(b.getMethod().getDeclaringClass().hasSuperclass())
-			if(b.getMethod().getDeclaringClass().getSuperclass().toString().equals("android.app.Service")){
-				if(b.getMethod().getName().equals("onCreate"))
-					entryPoints.add(b.getMethod());
-				else if(b.getMethod().getName().equals("onStart"))
-					entryPoints.add(b.getMethod());
-				else if(b.getMethod().getName().equals("onStartCommand"))
-					entryPoints.add(b.getMethod());
-				else if(b.getMethod().getName().equals("onBind"))
-					entryPoints.add(b.getMethod());
-				else if(b.getMethod().getName().equals("onUnbind"))
-					entryPoints.add(b.getMethod());
+		if(this.methodIsNeed(b.getMethod()))
+			this.entryPoints.add(b.getMethod());
+	}
+	
+	private boolean methodIsNeed(SootMethod m){
+		if(m.getDeclaringClass().hasSuperclass())
+			if(m.getDeclaringClass().getSuperclass().toString().equals("android.app.Service")){
+				if(m.getName().equals("onCreate"))
+					return true;
+				else if(m.getName().equals("onStart"))
+					return true;
+				else if(m.getName().equals("onStartCommand"))
+					return true;
+				else if(m.getName().equals("onBind"))
+					return true;
+				else if(m.getName().equals("onUnbind"))
+					return true;
 			}
+		return false;
 	}
 	
 	public List<SootMethod> getEntryPoints(){

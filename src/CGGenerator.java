@@ -1,83 +1,119 @@
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import soot.Body;
 import soot.MethodOrMethodContext;
+import soot.PatchingChain;
 import soot.SootMethod;
 import soot.Type;
+import soot.Unit;
+import soot.Value;
+import soot.ValueBox;
+import soot.jimple.AbstractStmtSwitch;
+import soot.jimple.AssignStmt;
+import soot.jimple.InvokeExpr;
+import soot.jimple.InvokeStmt;
+import soot.jimple.Stmt;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 
 public class CGGenerator {
-	public static List<CallGraph> entryGraphs = new LinkedList<CallGraph>();
-	public static List<SootMethod> Points = new LinkedList<SootMethod>();
+	private CallGraph myCG;
+	private List<MyIntent> myIntents;
 	
-	public void getCallGraph(CallGraph cg, List<SootMethod> entryPoints){
-		Points = entryPoints;
-		for(int i = 0; i < entryPoints.size(); i++)
-			entryGraphs.add(visit(cg, entryPoints.get(i)));
+	public CGGenerator(){
+		this.myCG = new CallGraph();
+		this.myIntents = new LinkedList<MyIntent>();
 	}
 	
-	public void printPoints(){
-		Iterator<SootMethod> it = Points.iterator();
-		if(it != null)
-			while(it.hasNext()){
-				SootMethod point = it.next();
-				System.out.println(point.toString());
+	public CGGenerator(CallGraph cg, List<SootMethod> points){
+		this.myCG = cg;
+		this.myIntents = new LinkedList<MyIntent>();
+		for(SootMethod m : points){
+			MyIntent intent = new MyIntent(m);
+			this.myIntents.add(intent);
+		}
+	}
+	
+	public boolean explorePoints(){
+		if(this.myCG.size() == 0)
+			return false;
+		if(this.myIntents.isEmpty())
+			return false;
+		int size = this.myIntents.size();
+		for(MyIntent mi: this.myIntents){
+			MyIntent temp = this.visit(mi.getMethod());
+			System.out.println(temp.getMethod().toString());
+			temp.proPrint();
+		}
+		return true;
+	}
+	
+	public void printIntents(){
+		for(MyIntent in : this.myIntents){
+			System.out.println(in.getMethod().toString() + ":");
+			in.proPrint();
+		}
+	}
+	
+	private MyIntent visit(SootMethod m){
+		//System.out.println(m.toString());
+		MyIntent intent = new MyIntent(m);
+		Body b = m.getActiveBody();
+		for(Value v : b.getParameterRefs()){
+			String temp = v.getType().toString();
+			if(temp.equals("android.content.Intent") || temp.equals("android.os.Bundle")){
+				intent.relAdd(v);
 			}
-	}
-	
-	public void printGraphs(){
-		Iterator<CallGraph> it = entryGraphs.iterator();
-		if(it != null)
-			while(it.hasNext()){
-				CallGraph cg = it.next();
-				System.out.println(cg.size());
+		}
+		
+		PatchingChain<Unit> units = b.getUnits();
+		for(Iterator<Unit> iter = units.snapshotIterator(); iter.hasNext();){
+			Unit u = iter.next();
+			int breakFlag = 0;
+			for(ValueBox v1 : u.getUseBoxes()){
+				for(Value v2 : intent.getRel())
+					if(v2.equals(v1.getValue())){
+						for(ValueBox v : u.getDefBoxes()){
+							String temp = v.getValue().getType().toString();
+							if(temp.equals("android.content.Intent") || temp.equals("android.os.Bundle"))
+								intent.relAdd(v.getValue());
+						}
+						MyStmtSwitch sw = new MyStmtSwitch();
+						sw.inMyIntent(intent);
+						u.apply(sw);
+						intent = sw.outMyIntent();
+						
+						breakFlag = 1;
+						break;
+					}
+				if(breakFlag == 1)
+					break;
 			}
-	}
-	
-	private static CallGraph visit(CallGraph cg, SootMethod m){
-		CallGraph myCall = new CallGraph();
-		//System.out.println(m.getSignature());
-		Iterator<Edge> outEdges = cg.edgesOutOf(m);
+		}
+		
+		Iterator<Edge> outEdges = this.myCG.edgesOutOf(m);
 		if(outEdges != null)
 			while(outEdges.hasNext()){
 				Edge e = outEdges.next();
-				
-				SootMethod c = (SootMethod) e.getTgt();
-				List<Type> para = c.getParameterTypes();
-                for(int i = 0;i < para.size(); i++){
-                	if((para.get(i).toString().equals("android.content.Intent"))||(para.get(i).toString().equals("android.os.Bundle"))){
-                		
-                		//System.out.println(e.src());
-        				//System.out.println(e.srcStmt());
-        				//System.out.println(e.tgt());
-        				System.out.println(e.tgt().getActiveBody().toString());
-                		
-                		myCall.addEdge(e);
-                		Points.add(c);
-                		mergeCallGraph(myCall,visit(cg,c));
-                	}
-                }
-			}
-		return myCall;
-        //Iterator<MethodOrMethodContext> ctargets = new Targets(outEdges);
-    }
-	
-	private static void mergeCallGraph(CallGraph cgMain, CallGraph cgSub){
-		if(cgSub.size() == 0)
-			return;
-		
-		Iterator<MethodOrMethodContext> allSource = cgSub.sourceMethods();
-		if(allSource != null)
-			while(allSource.hasNext()){
-				MethodOrMethodContext m = allSource.next();
-				Iterator<Edge> outEdges = cgSub.edgesOutOf(m);
-				if(outEdges != null)
-					while(outEdges.hasNext()){
-						Edge e = outEdges.next();
-						cgMain.addEdge(e);
+				if(e.srcStmt().containsInvokeExpr()){
+					int breakFlag = 0;
+					InvokeExpr invokeExpr = e.srcStmt().getInvokeExpr();
+					for(Value v1:invokeExpr.getArgs()){
+						for(Value v2 :intent.getRel())
+							if(v1.equals(v2)){
+								intent.mergeSubIntent(this.visit((SootMethod)e.getTgt()));
+								breakFlag = 1;
+								break;
+							}
+						if(breakFlag == 1)
+							break;
 					}
+				}
 			}
+		intent.relClean();
+		return intent;
 	}
 }

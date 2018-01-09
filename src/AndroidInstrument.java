@@ -12,7 +12,6 @@ public class AndroidInstrument{
 	public final static String androidJarPath="/Users/apple/Documents/Soot/android-platforms-master";
 	public final static String APKPath="/Users/apple/Documents/Android/version_2.apk";
 	//public final static String rtJarPath="/Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/jre/lib/rt.jar";
-	private static CGGenerator cgg = new CGGenerator();
 	
 	public static void initSoot(String[] args){
 		Options.v().set_src_prec(Options.src_prec_apk);
@@ -31,20 +30,22 @@ public class AndroidInstrument{
 	
 	public static void main(String[] args) {
 		initSoot(args);
-		SearchTransformer mysearch = new SearchTransformer();
-        PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter",mysearch));
+		
+		SearchTransformer mySearch = new SearchTransformer();
+        PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter",mySearch));
         PackManager.v().runPacks();
         
         CallGraph cg = Scene.v().getCallGraph();
-        cg
-        cgg.getCallGraph(cg, mysearch.entryPoints);
-        
+        CGGenerator cgg = new CGGenerator(cg, mySearch.getEntryPoints());
+        cgg.explorePoints();
+        //cgg.printIntents();
+        /*
         RunTransformer myrun = new RunTransformer();
         myrun.init(CGGenerator.entryGraphs, CGGenerator.Points);
         PackManager.v().getPack("jtp").remove("jtp.myInstrumenter");
         PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter",myrun));
         PackManager.v().runPacks();
-        
+        */
         return;
 	}
 }
