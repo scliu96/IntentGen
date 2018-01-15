@@ -1,6 +1,9 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import soot.Type;
 import soot.SootMethod;
 import soot.Value;
 import soot.ValueBox;
@@ -8,18 +11,18 @@ import soot.ValueBox;
 public class MyIntent {
 	private SootMethod method;
 	private List<Value> rel;
-	private List<String> property;
+	private Map<String,Type> property;
 	
 	public MyIntent(){
 		this.method = null;
 		this.rel = new ArrayList<Value>();
-		this.property = new ArrayList<String>();
+		this.property = new HashMap<String,Type>();
 	}
 	
 	public MyIntent(SootMethod m){
 		this.method = m;
 		this.rel = new ArrayList<Value>();
-		this.property = new ArrayList<String>();
+		this.property = new HashMap<String,Type>();
 	}
 	
 	public void setMethod(SootMethod m){
@@ -58,32 +61,32 @@ public class MyIntent {
 		}
 	}
 	
-	public List<String> getPro(){
+	public Map<String,Type> getPro(){
 		return this.property;
 	}
 	
 	public boolean proContain(String s){
 		if( this.property.isEmpty())
 			return false;
-		if( this.property.contains(s) )
+		if( this.property.containsKey(s))
 			return true;
 		return false;
 	}
 	
-	public boolean proAdd(String s){
-		if(!this.property.contains(s))
-			this.property.add(s);
+	public boolean proAdd(String s, Type t){
+		if(!this.property.containsKey(s))
+			this.property.put(s, t);
 		return true;
 	}
 	
 	public void proPrint(){
-		for(String s : this.property)
-			System.out.println(s);
+		for(String s : this.property.keySet())
+			System.out.println(s + "," + this.property.get(s));
 	}
 	
 	public void mergeSubIntent(MyIntent sub){
-		for(String s : sub.getPro()){
-			this.proAdd(s);
+		for(String s : sub.getPro().keySet()){
+			this.proAdd(s,sub.getPro().get(s));
 		}
 	}
 	
