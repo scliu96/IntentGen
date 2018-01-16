@@ -1,5 +1,7 @@
+package IntentFind;
 import java.util.Collections;
 import java.util.List;
+
 import soot.PackManager;
 import soot.Scene;
 import soot.SootMethod;
@@ -10,7 +12,7 @@ import soot.options.Options;
 public class AndroidInstrument{
 	public final static String sootJarPath="/Users/apple/Documents/Soot/FlowDroid/sootclasses-trunk-jar-with-dependencies.jar";
 	public final static String androidJarPath="/Users/apple/Documents/Soot/android-platforms-master";
-	public final static String APKPath="/Users/apple/Documents/Android/version_2.apk";
+	public final static String APKPath="/Users/apple/Documents/Android/version_4.apk";
 	//public final static String rtJarPath="/Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/jre/lib/rt.jar";
 	
 	public static void initSoot(String[] args){

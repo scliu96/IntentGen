@@ -1,3 +1,4 @@
+package IntentFind;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,28 +10,47 @@ import soot.Value;
 import soot.ValueBox;
 
 public class MyIntent {
-	private SootMethod method;
+	private List<SootMethod> method;
 	private List<Value> rel;
 	private Map<String,Type> property;
 	
 	public MyIntent(){
-		this.method = null;
+		this.method = new ArrayList<SootMethod>();
 		this.rel = new ArrayList<Value>();
 		this.property = new HashMap<String,Type>();
 	}
 	
 	public MyIntent(SootMethod m){
+		this.method = new ArrayList<SootMethod>();
+		this.method.add(m);
+		this.rel = new ArrayList<Value>();
+		this.property = new HashMap<String,Type>();
+	}
+	
+	public MyIntent(List<SootMethod> m){
 		this.method = m;
 		this.rel = new ArrayList<Value>();
 		this.property = new HashMap<String,Type>();
 	}
 	
-	public void setMethod(SootMethod m){
-		this.method = m;
+	public boolean containMethod(SootMethod m){
+		if(this.method.contains(m))
+			return true;
+		else return false;
 	}
 	
-	public SootMethod getMethod(){
+	public void addMethod(SootMethod m){
+		if(!this.method.contains(m))
+			this.method.add(m);
+	}
+	
+	public List<SootMethod> getMethodList(){
 		return this.method;
+	}
+	
+	public SootMethod getLastMethod(){
+		int size = this.method.size();
+		return this.method.get(size-1);
 	}
 	
 	public List<Value> getRel(){

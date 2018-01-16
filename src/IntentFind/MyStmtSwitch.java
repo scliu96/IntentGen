@@ -1,10 +1,13 @@
+package IntentFind;
+import soot.Body;
 import soot.Value;
 import soot.jimple.AbstractStmtSwitch;
 import soot.jimple.AssignStmt;
 import soot.jimple.InvokeExpr;
 
 public class MyStmtSwitch extends AbstractStmtSwitch{
-	MyIntent intent;
+	private Body body;
+	private MyIntent intent;
 	
 	public void caseAssignStmt(AssignStmt stmt){
 		if(stmt.containsInvokeExpr()){
@@ -16,6 +19,7 @@ public class MyStmtSwitch extends AbstractStmtSwitch{
 			System.out.println("4:" + invokeExpr.getType().toString());
 			System.out.println("5:" + invokeExpr.getArgs().toString());
 			*/
+			System.out.println(this.body.toString());
 			for(Value v : invokeExpr.getArgs()){
 				if(v.getType().toString().equals("java.lang.String")){
 					this.intent.proAdd(v.toString(),invokeExpr.getType());
@@ -25,7 +29,8 @@ public class MyStmtSwitch extends AbstractStmtSwitch{
 		}
 	}
 	
-	public void inMyIntent(MyIntent in){
+	public void inMyIntent(Body b, MyIntent in){
+		this.body = b;
 		this.intent = in;
 	}
 	

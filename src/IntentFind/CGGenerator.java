@@ -1,3 +1,4 @@
+package IntentFind;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -42,10 +43,10 @@ public class CGGenerator {
 			return false;
 		if(this.myIntents.isEmpty())
 			return false;
-		int size = this.myIntents.size();
+		//int size = this.myIntents.size();
 		for(MyIntent mi: this.myIntents){
-			MyIntent temp = this.visit(mi.getMethod());
-			System.out.println(temp.getMethod().toString());
+			MyIntent temp = this.visit(new ArrayList<SootMethod>(),mi.getLastMethod());
+			System.out.println(temp.getLastMethod().toString());
 			temp.proPrint();
 		}
 		return true;
@@ -53,15 +54,15 @@ public class CGGenerator {
 	
 	public void printIntents(){
 		for(MyIntent in : this.myIntents){
-			System.out.println(in.getMethod().toString() + ":");
+			//System.out.println(in.getMethod().toString() + ":");
 			in.proPrint();
 		}
 	}
 	
-	private MyIntent visit(SootMethod m){
-		//System.out.println(m.toString());
-		MyIntent intent = new MyIntent(m);
-		Body b = m.getActiveBody();
+	private MyIntent visit(List<SootMethod> li,SootMethod m){
+		MyIntent intent = new MyIntent(li);
+		intent.addMethod(m);
+		Body b = m.retrieveActiveBody();
 		for(Value v : b.getParameterRefs()){
 			String temp = v.getType().toString();
 			if(temp.equals("android.content.Intent") || temp.equals("android.os.Bundle")){
@@ -82,7 +83,7 @@ public class CGGenerator {
 								intent.relAdd(v.getValue());
 						}
 						MyStmtSwitch sw = new MyStmtSwitch();
-						sw.inMyIntent(intent);
+						sw.inMyIntent(b,intent);
 						u.apply(sw);
 						intent = sw.outMyIntent();
 						
@@ -104,9 +105,12 @@ public class CGGenerator {
 					for(Value v1:invokeExpr.getArgs()){
 						for(Value v2 :intent.getRel())
 							if(v1.equals(v2)){
-								intent.mergeSubIntent(this.visit((SootMethod)e.getTgt()));
-								breakFlag = 1;
-								break;
+								if(!intent.containMethod((SootMethod)e.getTgt())){
+									MyIntent sub = this.visit(intent.getMethodList(), (SootMethod)e.getTgt());
+									intent.mergeSubIntent(sub);
+									breakFlag = 1;
+									break;
+								}
 							}
 						if(breakFlag == 1)
 							break;
