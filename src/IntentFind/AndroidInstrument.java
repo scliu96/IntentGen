@@ -23,10 +23,6 @@ public class AndroidInstrument{
 		Options.v().set_allow_phantom_refs(true);
 		
 		Options.v().set_whole_program(true);
-		//Options.v().setPhaseOption("cg.spark verbose:true", "on");
-		//Options.v().setPhaseOption("cg.spark", "on");
-		//Options.v().setPhaseOption("cg.spark", "rta:true");
-		//Options.v().setPhaseOption("cg.spark", "on-fly-cg:false");
 		Scene.v().loadNecessaryClasses();
 	}
 	
@@ -40,14 +36,8 @@ public class AndroidInstrument{
         CallGraph cg = Scene.v().getCallGraph();
         CGGenerator cgg = new CGGenerator(cg, mySearch.getEntryPoints());
         cgg.explorePoints();
-        //cgg.printIntents();
-        /*
-        RunTransformer myrun = new RunTransformer();
-        myrun.init(CGGenerator.entryGraphs, CGGenerator.Points);
-        PackManager.v().getPack("jtp").remove("jtp.myInstrumenter");
-        PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter",myrun));
-        PackManager.v().runPacks();
-        */
+        cgg.printIntents();
+        List<MyIntent> result = cgg.getIntents();
         return;
 	}
 }

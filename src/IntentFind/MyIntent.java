@@ -11,25 +11,29 @@ import soot.ValueBox;
 
 public class MyIntent {
 	private List<SootMethod> method;
-	private List<Value> rel;
+	private List<Value> intent;
+	private List<Value> bundle;
 	private Map<String,Type> property;
 	
 	public MyIntent(){
 		this.method = new ArrayList<SootMethod>();
-		this.rel = new ArrayList<Value>();
+		this.intent = new ArrayList<Value>();
+		this.bundle = new ArrayList<Value>();
 		this.property = new HashMap<String,Type>();
 	}
 	
 	public MyIntent(SootMethod m){
 		this.method = new ArrayList<SootMethod>();
 		this.method.add(m);
-		this.rel = new ArrayList<Value>();
+		this.intent = new ArrayList<Value>();
+		this.bundle = new ArrayList<Value>();
 		this.property = new HashMap<String,Type>();
 	}
 	
 	public MyIntent(List<SootMethod> m){
 		this.method = m;
-		this.rel = new ArrayList<Value>();
+		this.intent = new ArrayList<Value>();
+		this.bundle = new ArrayList<Value>();
 		this.property = new HashMap<String,Type>();
 	}
 	
@@ -44,48 +48,88 @@ public class MyIntent {
 			this.method.add(m);
 	}
 	
-	public List<SootMethod> getMethodList(){
+	public List<SootMethod> getMethods(){
 		return this.method;
 	}
 	
-	public SootMethod getLastMethod(){
+	public void setMethods(List<SootMethod> m){
+		this.method = m;
+	}
+	
+	public SootMethod getMethod(){
 		int size = this.method.size();
 		return this.method.get(size-1);
 	}
 	
-	public List<Value> getRel(){
-		return this.rel;
+	public List<Value> getIntent(){
+		return this.intent;
 	}
 	
-	public boolean relContain(Value v){
-		if( this.rel.isEmpty())
+	public void setIntent(List<Value> in){
+		this.intent = in;
+	}
+	
+	public boolean containIntent(Value v){
+		if( this.intent.isEmpty())
 			return false;
-		if( this.rel.contains(v) )
+		if( this.intent.contains(v) )
 			return true;
 		else return false;
 	}
 	
-	public boolean relAdd(Value v){
-		if(!this.rel.contains(v))
-			this.rel.add(v);
+	public boolean addIntent(Value v){
+		if(!this.intent.contains(v))
+			this.intent.add(v);
 		return true;
 	}
 	
-	public void relClean(){
-		this.rel.clear();
+	public void cleanIntent(){
+		this.intent.clear();
 	}
 	
-	public void relPrint(){
-		for(Value v : this.rel){
+	public void printIntent(){
+		for(Value v : this.intent){
 			System.out.println(v.toString());
 		}
 	}
 	
-	public Map<String,Type> getPro(){
+	public List<Value> getBundle(){
+		return this.bundle;
+	}
+	
+	public void setBundle(List<Value> bun){
+		this.bundle = bun;
+	}
+	
+	public boolean containBundle(Value v){
+		if( this.bundle.isEmpty())
+			return false;
+		if( this.bundle.contains(v) )
+			return true;
+		else return false;
+	}
+	
+	public boolean addBundle(Value v){
+		if(!this.bundle.contains(v))
+			this.bundle.add(v);
+		return true;
+	}
+	
+	public void cleanBundle(){
+		this.bundle.clear();
+	}
+	
+	public void printBundle(){
+		for(Value v : this.bundle){
+			System.out.println(v.toString());
+		}
+	}
+	
+	public Map<String,Type> getProperty(){
 		return this.property;
 	}
 	
-	public boolean proContain(String s){
+	public boolean containProperty(String s){
 		if( this.property.isEmpty())
 			return false;
 		if( this.property.containsKey(s))
@@ -93,21 +137,14 @@ public class MyIntent {
 		return false;
 	}
 	
-	public boolean proAdd(String s, Type t){
+	public boolean addProperty(String s, Type t){
 		if(!this.property.containsKey(s))
 			this.property.put(s, t);
 		return true;
 	}
 	
-	public void proPrint(){
+	public void printProperty(){
 		for(String s : this.property.keySet())
 			System.out.println(s + "," + this.property.get(s));
 	}
-	
-	public void mergeSubIntent(MyIntent sub){
-		for(String s : sub.getPro().keySet()){
-			this.proAdd(s,sub.getPro().get(s));
-		}
-	}
-	
 }
