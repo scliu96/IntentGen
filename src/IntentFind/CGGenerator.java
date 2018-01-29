@@ -4,8 +4,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import soot.Body;
+import soot.Local;
 import soot.MethodOrMethodContext;
 import soot.PatchingChain;
 import soot.SootMethod;
@@ -154,61 +156,56 @@ public class CGGenerator {
 			if(v instanceof JVirtualInvokeExpr){
 				JVirtualInvokeExpr jv = (JVirtualInvokeExpr) v;
 				Value base = jv.getBase();
-				if(base.getType().toString().equals("android.content.Intent")){
-					String name = jv.getMethodRef().name();
-					if((name.contains("Extra")) && (!name.equals("hasExtra")))
-						if(jv.getArgCount() > 0){
-							Value arg0 = jv.getArg(0);
-							if(arg0.getType().toString().equals("java.lang.String")){
-								if(arg0 instanceof StringConstant)
-									intent.addProperty(((StringConstant)arg0).value, jv.getType());
-								else{
-									JimpleLocal local = (JimpleLocal) arg0;
-									intent.addProperty(local.getName(), jv.getType());
-								}
-							}
-						}
-				}
-				else if(base.getType().toString().equals("android.os.Bundle")){
+				if(base.getType().toString().equals("android.content.Intent") &&
+						Pattern.matches("get.*Extra", jv.getMethodRef().toString()) ){
 					if(jv.getArgCount() > 0){
-						Value arg0 = jv.getArg(0);
-						if(arg0.getType().toString().equals("java.lang.String"))
-							if(arg0 instanceof StringConstant)
-								intent.addProperty(((StringConstant)arg0).value, jv.getType());
-							else{
-								JimpleLocal local = (JimpleLocal) arg0;
-								intent.addProperty(local.getName(), jv.getType());
-							}
+						Value extraKeyValue = jv.getArg(0);
+						if(extraKeyValue instanceof StringConstant)
+							intent.addProperty( ((StringConstant)extraKeyValue).value, jv.getType());
+						else if(extraKeyValue instanceof Local){
+							Local extraKeyLocal = (Local) extraKeyValue;
+							intent.addProperty(extraKeyLocal.getName(), jv.getType());
+						}
+					}
+				}
+				else if(base.getType().toString().equals("android.os.Bundle") &&
+						Pattern.matches("get.*", jv.getMethodRef().toString()) ){
+					if(jv.getArgCount() > 0){
+						Value extraKeyValue = jv.getArg(0);
+						if(extraKeyValue instanceof StringConstant)
+							intent.addProperty( ((StringConstant)extraKeyValue).value, jv.getType());
+						else if(extraKeyValue instanceof Local){
+							Local extraKeyLocal = (Local) extraKeyValue;
+							intent.addProperty(extraKeyLocal.getName(), jv.getType());
+						}
 					}
 				}
 			}
 			else if(v instanceof JSpecialInvokeExpr){
 				JSpecialInvokeExpr jv = (JSpecialInvokeExpr) v;
 				Value base = jv.getBase();
-				if(base.getType().toString().equals("android.content.Intent")){
-					String name = jv.getMethodRef().name();
-					if((name.contains("Extra")) && (!name.equals("hasExtra")))
-						if(jv.getArgCount() > 0){
-							Value arg0 = jv.getArg(0);
-							if(arg0.getType().toString().equals("java.lang.String"))
-								if(arg0 instanceof StringConstant)
-									intent.addProperty(((StringConstant)arg0).value, jv.getType());
-								else{
-									JimpleLocal local = (JimpleLocal) arg0;
-									intent.addProperty(local.getName(), jv.getType());
-								}
-						}
-				}
-				else if(base.getType().toString().equals("android.os.Bundle")){
+				if(base.getType().toString().equals("android.content.Intent") &&
+						Pattern.matches("get.*Extra", jv.getMethodRef().toString()) ){
 					if(jv.getArgCount() > 0){
-						Value arg0 = jv.getArg(0);
-						if(arg0.getType().toString().equals("java.lang.String"))
-							if(arg0 instanceof StringConstant)
-								intent.addProperty(((StringConstant)arg0).value, jv.getType());
-							else{
-								JimpleLocal local = (JimpleLocal) arg0;
-								intent.addProperty(local.getName(), jv.getType());
-							}
+						Value extraKeyValue = jv.getArg(0);
+						if(extraKeyValue instanceof StringConstant)
+							intent.addProperty( ((StringConstant)extraKeyValue).value, jv.getType());
+						else if(extraKeyValue instanceof Local){
+							Local extraKeyLocal = (Local) extraKeyValue;
+							intent.addProperty(extraKeyLocal.getName(), jv.getType());
+						}
+					}
+				}
+				else if(base.getType().toString().equals("android.os.Bundle") &&
+						Pattern.matches("get.*", jv.getMethodRef().toString()) ){
+					if(jv.getArgCount() > 0){
+						Value extraKeyValue = jv.getArg(0);
+						if(extraKeyValue instanceof StringConstant)
+							intent.addProperty( ((StringConstant)extraKeyValue).value, jv.getType());
+						else if(extraKeyValue instanceof Local){
+							Local extraKeyLocal = (Local) extraKeyValue;
+							intent.addProperty(extraKeyLocal.getName(), jv.getType());
+						}
 					}
 				}
 			}
