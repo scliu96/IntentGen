@@ -21,7 +21,7 @@ public class AndroidInstrument{
 		Options.v().set_process_dir(Collections.singletonList(APKPath));
 		Options.v().set_output_format(Options.output_format_none);
 		Options.v().set_allow_phantom_refs(true);
-		//test
+		//test11
 		Options.v().set_whole_program(true);
 		Scene.v().loadNecessaryClasses();
 	}
