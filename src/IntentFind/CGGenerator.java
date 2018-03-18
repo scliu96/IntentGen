@@ -62,6 +62,8 @@ public class CGGenerator {
 	public void printIntents(){
 		for(MyIntent intent : this.myIntents){
 			System.out.println(intent.getMethod().toString() + ":");
+			System.out.println(intent.getProperty().toString());
+			System.out.println();
 			intent.printProperty();
 		}
 	}
