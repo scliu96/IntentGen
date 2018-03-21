@@ -1,4 +1,4 @@
-package IntentFind;
+package IF;
 import java.util.Collections;
 import java.util.List;
 
@@ -12,7 +12,7 @@ import soot.options.Options;
 public class AndroidInstrument{
 	//public final static String sootJarPath="/Users/apple/Documents/Soot/sootclasses-trunk-jar-with-dependencies.jar";
 	public final static String androidJarPath="/Users/apple/Documents/Eclipse/android-platforms-master";
-	public final static String APKPath="/Users/apple/Documents/AndroidStudio/version_4.apk";
+	public final static String APKPath="/Users/apple/Documents/AndroidStudio/release/app-release.apk";
 	//public final static String rtJarPath="/Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/jre/lib/rt.jar";
 	
 	public static void initSoot(String[] args){

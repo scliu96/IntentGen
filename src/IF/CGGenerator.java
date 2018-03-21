@@ -1,4 +1,4 @@
-package IntentFind;
+package IF;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
