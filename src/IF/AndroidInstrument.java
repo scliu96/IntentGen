@@ -37,7 +37,7 @@ public class AndroidInstrument{
         CGGenerator cgg = new CGGenerator(cg, mySearch.getEntryPoints());
         cgg.explorePoints();
         cgg.printIntents();
-        List<MyIntent> result = cgg.getIntents();
+        List<Intent> result = cgg.getIntents();
         return;
 	}
 }

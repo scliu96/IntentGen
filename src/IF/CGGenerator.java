@@ -1,9 +1,12 @@
 package IF;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import soot.Body;
@@ -31,36 +34,37 @@ import soot.jimple.toolkits.callgraph.Edge;
 
 public class CGGenerator {
 	private CallGraph myCG;
-	private List<MyIntent> myIntents;
+	private Set<SootMethod> entryPoints;
+	private Map<Path,Intent> pathMap;
 	
 	public CGGenerator(){
-		this.myCG = new CallGraph();
-		this.myIntents = new LinkedList<MyIntent>();
+		myCG = new CallGraph();
+		entryPoints = new LinkedHashSet<SootMethod>();
+		pathMap = new LinkedHashMap<Path,Intent>();
 	}
 	
-	public CGGenerator(CallGraph cg, List<SootMethod> points){
-		this.myCG = cg;
-		this.myIntents = new LinkedList<MyIntent>();
-		for(SootMethod m : points)
-			this.myIntents.add(new MyIntent(m));
+	public CGGenerator(CallGraph cg, Set<SootMethod> points){
+		myCG = cg;
+		pathMap = new LinkedHashMap<Path,Intent>();
+		entryPoints.addAll(points);
 	}
 	
 	public boolean explorePoints(){
-		if(this.myCG.size() == 0)
+		if(myCG.size() == 0)
 			return false;
-		if(this.myIntents.isEmpty())
+		if(entryPoints.isEmpty())
 			return false;
-		for(MyIntent intent : this.myIntents)
+		for(SootMethod m : entryPoints)
 			this.visit(intent, intent.getMethod());
 		return true;
 	}
 	
-	public List<MyIntent> getIntents(){
+	public List<Intent> getIntents(){
 		return this.myIntents;
 	}
 	
 	public void printIntents(){
-		for(MyIntent intent : this.myIntents){
+		for(Intent intent : this.myIntents){
 			System.out.println(intent.getMethod().toString() + ":");
 			System.out.println(intent.getProperty().toString());
 			System.out.println();
@@ -68,7 +72,7 @@ public class CGGenerator {
 		}
 	}
 	
-	private void visit(MyIntent intent,SootMethod m){
+	private void visit(Intent intent,SootMethod m){
 		intent.addMethod(m);
 		Body b = m.retrieveActiveBody();
 		for(Value v : b.getParameterRefs()){
@@ -114,7 +118,7 @@ public class CGGenerator {
 			}
 	}
 	
-	private void compareValue(MyIntent intent, Unit u){
+	private void compareValue(Intent intent, Unit u){
 		int breakFlag = 0;
 		for(ValueBox v1 : u.getUseBoxes()){
 			
@@ -152,7 +156,7 @@ public class CGGenerator {
 		}
 	}
 	
-	private void judgeStmt(MyIntent intent,Stmt stmt){
+	private void judgeStmt(Intent intent,Stmt stmt){
 		if(stmt.containsInvokeExpr()){
 			Value v = stmt.getInvokeExprBox().getValue();
 			if(v instanceof JVirtualInvokeExpr){

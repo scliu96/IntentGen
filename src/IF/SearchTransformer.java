@@ -1,19 +1,21 @@
 package IF;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import soot.Body;
 import soot.BodyTransformer;
 import soot.SootMethod;
 
 public class SearchTransformer extends BodyTransformer{
-	private List<SootMethod> entryPoints = new LinkedList<SootMethod>();
+	private Set<SootMethod> entryPoints = new LinkedHashSet<SootMethod>();
 	
 	@Override
 	protected void internalTransform(final Body b,String phaseName,final Map<String,String> options){
-		if(this.methodIsNeed(b.getMethod()))
-			this.entryPoints.add(b.getMethod());
+		if(methodIsNeed(b.getMethod()))
+			entryPoints.add(b.getMethod());
 	}
 	
 	private boolean methodIsNeed(SootMethod m){
@@ -33,7 +35,7 @@ public class SearchTransformer extends BodyTransformer{
 		return false;
 	}
 	
-	public List<SootMethod> getEntryPoints(){
+	public Set<SootMethod> getEntryPoints(){
 		return entryPoints;
 	}
 }
