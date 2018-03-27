@@ -3,6 +3,7 @@ import java.util.Collections;
 import java.util.List;
 
 import SSE.PathAnalysis;
+import soot.G;
 import soot.PackManager;
 import soot.Scene;
 import soot.SootMethod;
@@ -35,9 +36,9 @@ public class SootInit{
         PackManager.v().runPacks();
         
         CallGraph cg = Scene.v().getCallGraph();
-        //System.out.println(mySearch.getEntryPoints());
+        System.out.println(mySearch.getEntryPoints());
         PathAnalysis pathAnalysis = new PathAnalysis(cg, mySearch.getEntryPoints());
-        pathAnalysis.exploreEntryPoints();
+        //pathAnalysis.exploreEntryPoints();
         return;
 	}
 }

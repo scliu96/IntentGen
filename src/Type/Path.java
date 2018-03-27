@@ -34,10 +34,17 @@ public class Path {
 		return newPath;
 	}
 	
-	public void addMethod(Edge e) {
+	public boolean addMethod(Edge e) {
 		SootMethod nextMethod = (SootMethod) e.getTgt();
 		Stmt st = e.srcStmt();
+		if(methodPath.contains(nextMethod))
+			return false;
 		methodPath.add(nextMethod);
 		stmtCall.add(st);
+		return true;
+	}
+	
+	public void generateIntent() {
+		
 	}
 }

@@ -9,7 +9,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.javatuples.Pair;
+
 import Type.Path;
+import edu.uci.seal.StopWatch;
 import soot.Body;
 import soot.Local;
 import soot.MethodOrMethodContext;
@@ -32,6 +35,7 @@ import soot.jimple.internal.JVirtualInvokeExpr;
 import soot.jimple.internal.JimpleLocal;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
+import soot.toolkits.graph.BriefUnitGraph;
 
 public class PathAnalysis {
 	private CallGraph apkCG = new CallGraph();
@@ -54,25 +58,61 @@ public class PathAnalysis {
 			return false;
 		for(SootMethod m : entryPoints) {
 			Path newPath = new Path(m);
-			exploreMethodPath(m, newPath);
+			generateMethodPath(m, newPath);
 		}
 		System.out.println(paths.size());
 		return true;
 	}
 	
-	public void exploreMethodPath(SootMethod m, Path p) {
+	private void generateMethodPath(SootMethod m, Path p) {
 		paths.add(p);
 		//Body b = m.retrieveActiveBody();
 		Iterator<Edge> outEdges = apkCG.edgesOutOf(m);
-		if(outEdges != null) {
+		int count = 0;
+		if(outEdges != null)
 			while(outEdges.hasNext()) {
 				Edge e = outEdges.next();
 				Path newPath = p.copy();
-				newPath.addMethod(e);
-				exploreMethodPath((SootMethod) e.getTgt(), newPath);
+				if(newPath.addMethod(e)) {
+					generateMethodPath((SootMethod) e.getTgt(), newPath);
+					count++;
+				}
 			}
+		if(count != 0)
 			paths.remove(p);
+	}
+	
+	
+	private void doPathAnalysis(SootMethod m) {
+		Body b = m.getActiveBody();
+		PatchingChain<Unit> units = b.getUnits();
+		final BriefUnitGraph ug = new BriefUnitGraph(b);
+		final String currClassName = m.getDeclaringClass().getName();
+		
+		int totalUnitsToAnalyzeCount=0;
+		int currUnitToAnalyzeCount=0;
+		for (final Unit unit : units) {
+			boolean performPathAnalysis = false;
+			synchronized(m) {
+				performPathAnalysis = unitNeedsAnalysis(m, currClassName, unit);
+			}
+			
+			if (performPathAnalysis) {
+				//doPathAnalysisOnUnitUsingExecutor(method, ug, currClassName, unit);
+				totalUnitsToAnalyzeCount++;
+				currUnitToAnalyzeCount++;
+			}
 		}
+	}
+	
+	public boolean unitNeedsAnalysis(SootMethod m, String currClassName, Unit unit) {
+		if (unit instanceof InvokeStmt) {
+			InvokeStmt stmt = (InvokeStmt) unit;
+			if ( stmt.getInvokeExpr().getMethod().getName().equals("d") )  {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	/*
