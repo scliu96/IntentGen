@@ -11,13 +11,15 @@ import soot.Transform;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.options.Options;
 
-public class SootInit{
-	//public final static String sootJarPath="/Users/apple/Documents/Soot/sootclasses-trunk-jar-with-dependencies.jar";
+public class Init{
 	public final static String androidJarPath="/Users/apple/Documents/Eclipse/android-platforms-master";
 	public final static String APKPath="/Users/apple/Documents/AndroidStudio/release/app-release.apk";
-	//public final static String rtJarPath="/Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/jre/lib/rt.jar";
 	
-	public static void init(String[] args){
+	public final static boolean parallelEnabled = false;
+	public final static boolean pathLimitEnables = true;
+	public static int finalPathLimit;
+	
+	public static void sootInit(){
 		Options.v().set_src_prec(Options.src_prec_apk);
 		Options.v().set_android_jars(androidJarPath);
 		Options.v().set_process_dir(Collections.singletonList(APKPath));
@@ -28,8 +30,15 @@ public class SootInit{
 		Scene.v().loadNecessaryClasses();
 	}
 	
+	private static void pathInit() {
+		if(pathLimitEnables)
+			finalPathLimit = 100;
+		else finalPathLimit = Integer.MAX_VALUE;
+	}
+	
 	public static void main(String[] args) {
-		init(args);
+		sootInit();
+		pathInit();
 		
 		SearchTransformer mySearch = new SearchTransformer();
         PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter",mySearch));

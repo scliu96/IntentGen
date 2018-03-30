@@ -7,10 +7,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.regex.Pattern;
 
 import org.javatuples.Pair;
 
+import IF.Init;
 import Type.Path;
 import edu.uci.seal.StopWatch;
 import soot.Body;
@@ -42,11 +48,29 @@ public class PathAnalysis {
 	private Set<SootMethod> entryPoints = new LinkedHashSet<SootMethod>();
 	private Set<Path> paths = new LinkedHashSet<Path>();
 	
+	//private ExecutorService executor;
+	
 	public PathAnalysis(){
 		super();
+		/*
+		if (Init.parallelEnabled)
+			executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+		else executor = Executors.newSingleThreadExecutor();
+		if (executor instanceof ThreadPoolExecutor) {
+			((ThreadPoolExecutor) executor).setRejectedExecutionHandler(new RejectedExecutionHandler() {
+				public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+					try {
+						executor.getQueue().put(r);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+		}*/
 	}
 	
 	public PathAnalysis(CallGraph cg, Set<SootMethod> points){
+		this();
 		apkCG = cg;
 		entryPoints.addAll(points);
 	}
@@ -86,8 +110,8 @@ public class PathAnalysis {
 	private void doPathAnalysis(SootMethod m) {
 		Body b = m.getActiveBody();
 		PatchingChain<Unit> units = b.getUnits();
-		final BriefUnitGraph ug = new BriefUnitGraph(b);
-		final String currClassName = m.getDeclaringClass().getName();
+		BriefUnitGraph ug = new BriefUnitGraph(b);
+		String currClassName = m.getDeclaringClass().getName();
 		
 		int totalUnitsToAnalyzeCount=0;
 		int currUnitToAnalyzeCount=0;
@@ -105,7 +129,44 @@ public class PathAnalysis {
 		}
 	}
 	
-	public boolean unitNeedsAnalysis(SootMethod m, String currClassName, Unit unit) {
+	private boolean doPathAnalysisOnUnit(SootMethod m, BriefUnitGraph ug, String currClassName, Unit startingUnit) {
+		boolean isFeasible = false;
+		boolean enumeratePathsOnly = false;
+		
+		Set<Unit> discoveredUnits = new LinkedHashSet<Unit>();
+		discoveredUnits.add(startingUnit);
+		
+		Stack<Unit> workUnits = new Stack<Unit>();
+		workUnits.push(startingUnit);
+		
+		Stack<List<Unit>> workPaths = new Stack<List<Unit>>();
+		List<Unit> initialPath = new ArrayList<Unit>();
+		initialPath.add(startingUnit);
+		workPaths.push(initialPath);
+		
+		Set<List<Unit>> finalPaths = new LinkedHashSet<List<Unit>>();
+		boolean hitPathsLimit = false;
+		
+		while(!workUnits.isEmpty()) {
+			if(workPaths.size() != workUnits.size())
+				throw new RuntimeException("workUnits size is different from workPaths size");
+			Unit startUnitOfCurrPath = workUnits.pop();
+			List<Unit> currPath = workPaths.pop();
+			discoveredUnits.add(startUnitOfCurrPath);
+			
+			if(ug.getSuccsOf(startUnitOfCurrPath).isEmpty())
+				System.out.println("End Of Path");
+			
+			for(Unit succ : ug.getSuccsOf(startUnitOfCurrPath)) {
+				if(currPath.contains(succ)) {
+					System.out.println("loop finder");
+					continue;
+				}
+			}
+		}
+	}
+	
+	private boolean unitNeedsAnalysis(SootMethod m, String currClassName, Unit unit) {
 		if (unit instanceof InvokeStmt) {
 			InvokeStmt stmt = (InvokeStmt) unit;
 			if ( stmt.getInvokeExpr().getMethod().getName().equals("d") )  {
