@@ -14,11 +14,10 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.regex.Pattern;
 
-import org.javatuples.Pair;
+import org.apache.log4j.Logger;
 
 import IF.Init;
 import Type.Path;
-import edu.uci.seal.StopWatch;
 import soot.Body;
 import soot.Local;
 import soot.MethodOrMethodContext;
@@ -44,6 +43,8 @@ import soot.jimple.toolkits.callgraph.Edge;
 import soot.toolkits.graph.BriefUnitGraph;
 
 public class PathAnalysis {
+	private static Logger logger = Logger.getLogger(PathAnalysis.class);
+	
 	private CallGraph apkCG = new CallGraph();
 	private Set<SootMethod> entryPoints = new LinkedHashSet<SootMethod>();
 	private Set<Path> paths = new LinkedHashSet<Path>();
@@ -51,7 +52,7 @@ public class PathAnalysis {
 	//private ExecutorService executor;
 	
 	public PathAnalysis(){
-		super();
+		//super();
 		/*
 		if (Init.parallelEnabled)
 			executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -73,6 +74,7 @@ public class PathAnalysis {
 		this();
 		apkCG = cg;
 		entryPoints.addAll(points);
+		logger.debug("ojbk");
 	}
 	
 	public boolean exploreEntryPoints(){
