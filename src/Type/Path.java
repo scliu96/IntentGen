@@ -1,7 +1,9 @@
 package Type;
 
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import soot.SootMethod;
 import soot.Unit;
@@ -9,19 +11,26 @@ import soot.jimple.Stmt;
 import soot.jimple.toolkits.callgraph.Edge;
 
 public class Path {
+	
 	private SootMethod entryMethod = null;
 	private List<SootMethod> methodPath = new LinkedList<SootMethod>();
 	private List<Stmt> stmtCall = new LinkedList<Stmt>();
 	
-	private List<Unit> unitPath = new LinkedList<Unit>();
+	private Unit entryUnit = null;
+	public List<Unit> unitPath = new LinkedList<Unit>();
+	public Set<String> conds = new LinkedHashSet<String>();
+	public Set<String> decls = new LinkedHashSet<String>();
 	private Intent intent = new Intent();
 	
 	public Path() {
-		super();
 	}
 	
 	public Path(SootMethod m) {
 		entryMethod = m;
+	}
+	
+	public Path(Unit u) {
+		entryUnit = u;
 	}
 	
 	public Path copy() {
@@ -30,6 +39,8 @@ public class Path {
 		newPath.methodPath = methodPath;
 		newPath.stmtCall = stmtCall;
 		newPath.unitPath = unitPath;
+		newPath.conds = conds;
+		newPath.decls = decls;
 		newPath.intent = intent;
 		return newPath;
 	}
@@ -44,7 +55,18 @@ public class Path {
 		return true;
 	}
 	
-	public void generateIntent() {
-		
+	public boolean containUnit(Unit u) {
+		if(unitPath.contains(u))
+			return true;
+		else return false;
+	}
+	
+	public boolean addUnit(Unit u) {
+		if(containUnit(u))
+			return false;
+		else{
+			unitPath.add(u);
+			return true;
+		}
 	}
 }

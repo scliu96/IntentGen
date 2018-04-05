@@ -1,76 +1,28 @@
 package SSE;
-import java.util.ArrayList;
+
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import IF.Init;
 import Type.Path;
-import soot.Body;
-import soot.Local;
-import soot.MethodOrMethodContext;
-import soot.PatchingChain;
 import soot.SootMethod;
-import soot.Type;
-import soot.Unit;
-import soot.Value;
-import soot.ValueBox;
-import soot.jimple.AbstractStmtSwitch;
-import soot.jimple.AssignStmt;
-import soot.jimple.DefinitionStmt;
-import soot.jimple.InvokeExpr;
-import soot.jimple.InvokeStmt;
-import soot.jimple.Stmt;
-import soot.jimple.StringConstant;
-import soot.jimple.internal.JInterfaceInvokeExpr;
-import soot.jimple.internal.JSpecialInvokeExpr;
-import soot.jimple.internal.JVirtualInvokeExpr;
-import soot.jimple.internal.JimpleLocal;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
-import soot.toolkits.graph.BriefUnitGraph;
 
-public class PathAnalysis {
-	private static Logger logger = Logger.getLogger(PathAnalysis.class);
+public class PathAnalysisOnMethod {
+	private static Logger logger = LogManager.getLogger(PathAnalysisOnMethod.class);
 	
 	private CallGraph apkCG = new CallGraph();
 	private Set<SootMethod> entryPoints = new LinkedHashSet<SootMethod>();
 	private Set<Path> paths = new LinkedHashSet<Path>();
 	
-	//private ExecutorService executor;
-	
-	public PathAnalysis(){
-		//super();
-		/*
-		if (Init.parallelEnabled)
-			executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-		else executor = Executors.newSingleThreadExecutor();
-		if (executor instanceof ThreadPoolExecutor) {
-			((ThreadPoolExecutor) executor).setRejectedExecutionHandler(new RejectedExecutionHandler() {
-				public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-					try {
-						executor.getQueue().put(r);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-			});
-		}*/
+	public PathAnalysisOnMethod() {
 	}
 	
-	public PathAnalysis(CallGraph cg, Set<SootMethod> points){
+	public PathAnalysisOnMethod(CallGraph cg, Set<SootMethod> points){
 		this();
 		apkCG = cg;
 		entryPoints.addAll(points);
@@ -92,7 +44,6 @@ public class PathAnalysis {
 	
 	private void generateMethodPath(SootMethod m, Path p) {
 		paths.add(p);
-		//Body b = m.retrieveActiveBody();
 		Iterator<Edge> outEdges = apkCG.edgesOutOf(m);
 		int count = 0;
 		if(outEdges != null)
@@ -106,76 +57,6 @@ public class PathAnalysis {
 			}
 		if(count != 0)
 			paths.remove(p);
-	}
-	
-	
-	private void doPathAnalysis(SootMethod m) {
-		Body b = m.getActiveBody();
-		PatchingChain<Unit> units = b.getUnits();
-		BriefUnitGraph ug = new BriefUnitGraph(b);
-		String currClassName = m.getDeclaringClass().getName();
-		
-		int totalUnitsToAnalyzeCount=0;
-		int currUnitToAnalyzeCount=0;
-		for (final Unit unit : units) {
-			boolean performPathAnalysis = false;
-			synchronized(m) {
-				performPathAnalysis = unitNeedsAnalysis(m, currClassName, unit);
-			}
-			
-			if (performPathAnalysis) {
-				//doPathAnalysisOnUnitUsingExecutor(method, ug, currClassName, unit);
-				totalUnitsToAnalyzeCount++;
-				currUnitToAnalyzeCount++;
-			}
-		}
-	}
-	
-	private boolean doPathAnalysisOnUnit(SootMethod m, BriefUnitGraph ug, String currClassName, Unit startingUnit) {
-		boolean isFeasible = false;
-		boolean enumeratePathsOnly = false;
-		
-		Set<Unit> discoveredUnits = new LinkedHashSet<Unit>();
-		discoveredUnits.add(startingUnit);
-		
-		Stack<Unit> workUnits = new Stack<Unit>();
-		workUnits.push(startingUnit);
-		
-		Stack<List<Unit>> workPaths = new Stack<List<Unit>>();
-		List<Unit> initialPath = new ArrayList<Unit>();
-		initialPath.add(startingUnit);
-		workPaths.push(initialPath);
-		
-		Set<List<Unit>> finalPaths = new LinkedHashSet<List<Unit>>();
-		boolean hitPathsLimit = false;
-		
-		while(!workUnits.isEmpty()) {
-			if(workPaths.size() != workUnits.size())
-				throw new RuntimeException("workUnits size is different from workPaths size");
-			Unit startUnitOfCurrPath = workUnits.pop();
-			List<Unit> currPath = workPaths.pop();
-			discoveredUnits.add(startUnitOfCurrPath);
-			
-			if(ug.getSuccsOf(startUnitOfCurrPath).isEmpty())
-				System.out.println("End Of Path");
-			
-			for(Unit succ : ug.getSuccsOf(startUnitOfCurrPath)) {
-				if(currPath.contains(succ)) {
-					System.out.println("loop finder");
-					continue;
-				}
-			}
-		}
-	}
-	
-	private boolean unitNeedsAnalysis(SootMethod m, String currClassName, Unit unit) {
-		if (unit instanceof InvokeStmt) {
-			InvokeStmt stmt = (InvokeStmt) unit;
-			if ( stmt.getInvokeExpr().getMethod().getName().equals("d") )  {
-				return true;
-			}
-		}
-		return false;
 	}
 	
 	/*

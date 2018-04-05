@@ -2,7 +2,8 @@ package IF;
 import java.util.Collections;
 import java.util.List;
 
-import SSE.PathAnalysis;
+import SSE.PathAnalysisOnMethod;
+import SSE.PathAnalysisOnUnit;
 import soot.G;
 import soot.PackManager;
 import soot.Scene;
@@ -17,7 +18,7 @@ public class Init{
 	
 	public final static boolean parallelEnabled = false;
 	public final static boolean pathLimitEnables = true;
-	public static int finalPathLimit;
+	public static int finalPathsLimit;
 	
 	public static void sootInit(){
 		Options.v().set_src_prec(Options.src_prec_apk);
@@ -32,8 +33,8 @@ public class Init{
 	
 	private static void pathInit() {
 		if(pathLimitEnables)
-			finalPathLimit = 100;
-		else finalPathLimit = Integer.MAX_VALUE;
+			finalPathsLimit = 100;
+		else finalPathsLimit = Integer.MAX_VALUE;
 	}
 	
 	public static void main(String[] args) {
@@ -46,8 +47,8 @@ public class Init{
         
         CallGraph cg = Scene.v().getCallGraph();
         System.out.println(mySearch.getEntryPoints());
-        PathAnalysis pathAnalysis = new PathAnalysis(cg, mySearch.getEntryPoints());
-        //pathAnalysis.exploreEntryPoints();
+        PathAnalysisOnMethod methodPathAnalysis = new PathAnalysisOnMethod(cg, mySearch.getEntryPoints());
+        methodPathAnalysis.exploreEntryPoints();
         return;
 	}
 }
