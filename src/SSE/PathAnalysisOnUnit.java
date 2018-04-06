@@ -31,6 +31,7 @@ import soot.ValueBox;
 import soot.jimple.AbstractStmtSwitch;
 import soot.jimple.AssignStmt;
 import soot.jimple.DefinitionStmt;
+import soot.jimple.IfStmt;
 import soot.jimple.InvokeExpr;
 import soot.jimple.InvokeStmt;
 import soot.jimple.Stmt;
@@ -52,23 +53,23 @@ public class PathAnalysisOnUnit {
 	public PathAnalysisOnUnit(){
 	}
 	
-	private void doPathAnalysis(SootMethod m) {
-		Body b = m.getActiveBody();
+	private void doPathAnalysis(SootMethod method) {
+		Body b = method.getActiveBody();
 		PatchingChain<Unit> units = b.getUnits();
 		BriefUnitGraph ug = new BriefUnitGraph(b);
-		String currClassName = m.getDeclaringClass().getName();
+		String currClassName = method.getDeclaringClass().getName();
 		int totalUnitsToAnalyzeCount = 0;
 		int currUnitToAnalyzeCount = 0;
 		for (final Unit unit : units) {
 			boolean performPathAnalysis = false;
-			synchronized(m) {
-				performPathAnalysis = unitNeedsAnalysis(m, currClassName, unit);
+			synchronized(method) {
+				performPathAnalysis = unitNeedsAnalysis(method, currClassName, unit);
 			}
 			
 			if (performPathAnalysis) {
 				logger.trace("Performing path analysis for unit: " + unit);
 				logger.trace("Currently analyzing unit " + currUnitToAnalyzeCount + " of" + totalUnitsToAnalyzeCount);
-				doPathAnalysisOnUnit(m, ug, currClassName, unit);
+				doPathAnalysisOnUnit(method, ug, currClassName, unit);
 				totalUnitsToAnalyzeCount++;
 				currUnitToAnalyzeCount++;
 				logger.trace("totalUnitsToAnalyzeCount: " + totalUnitsToAnalyzeCount + " , currUnitToAnalyzeCount: "+ currUnitToAnalyzeCount);
@@ -77,7 +78,7 @@ public class PathAnalysisOnUnit {
 		}
 	}
 	
-	private boolean unitNeedsAnalysis(SootMethod m, String currClassName, Unit unit) {
+	private boolean unitNeedsAnalysis(SootMethod method, String currClassName, Unit unit) {
 		if (unit instanceof InvokeStmt) {
 			InvokeStmt stmt = (InvokeStmt) unit;
 			if ( stmt.getInvokeExpr().getMethod().getName().equals("d") )  {
@@ -87,7 +88,7 @@ public class PathAnalysisOnUnit {
 		return false;
 	}
 	
-	private boolean doPathAnalysisOnUnit(SootMethod m, BriefUnitGraph ug, String currClassName, Unit startingUnit) {
+	private boolean doPathAnalysisOnUnit(SootMethod method, BriefUnitGraph ug, String currClassName, Unit startingUnit) {
 		boolean isFeasible = false;
 		boolean enumeratePathsOnly = false;
 		
@@ -135,13 +136,14 @@ public class PathAnalysisOnUnit {
 		
 		List<Path> intraPaths = new ArrayList<Path>();
 		for(Path currPath : finalPaths) {
-			analyzeProgramPath(m,currPath);
+			analyzeProgramPath(method,currPath);
 		}
-		return true;
+		
+		return isFeasible;
 	}
 	
-	public void analyzeProgramPath(SootMethod m, Path p) {
-		List<Unit> currPathList = p.unitPath;
+	public void analyzeProgramPath(SootMethod method, Path path) {
+		List<Unit> currPathList = path.unitPath;
 		for(int i = 0; i<currPathList.size();i++) {
 			Unit currUnitInPath = currPathList.get(i);
 			Unit predUnit = null;
@@ -149,17 +151,24 @@ public class PathAnalysisOnUnit {
 				predUnit = currPathList.get(i-1);
 			UnitGraph unitGraph = null;
 			SimpleLocalDefs defs = null;
-			if(m.hasActiveBody()) {
-				unitGraph = new ExceptionalUnitGraph(m.getActiveBody());
-				synchronized(m) {
+			if(method.hasActiveBody()) {
+				unitGraph = new ExceptionalUnitGraph(method.getActiveBody());
+				synchronized(method) {
 					defs = new SimpleLocalDefs(unitGraph);
 				}
 			}
-			else logger.warn("method " + m.getName() + " has no active body");
+			else logger.warn("method " + method.getName() + " has no active body");
 			
 			try {
 				Stmt currStmtInPath = (Stmt) currUnitInPath;
 				Set<String> currExprs = new LinkedHashSet<String>();
+				if(currStmtInPath instanceof IfStmt)
+					StmtHandle.handleIfStmt(method, path, defs, (IfStmt) currStmtInPath);
+				else if(currStmtInPath.containsInvokeExpr() && currStmtInPath instanceof DefinitionStmt) {
+					StmtHandle.handleIntentGetExtraStmt(method, path, defs, (DefinitionStmt) currStmtInPath);
+					StmtHandle.handleIntentGetActionStmt(method, path, defs, (DefinitionStmt) currStmtInPath);
+				}
+				else logger.warn("Not including condition for " + currUnitInPath + " to path constraint");
 			}catch (NullPointerException e) {
                 e.printStackTrace();
             }
