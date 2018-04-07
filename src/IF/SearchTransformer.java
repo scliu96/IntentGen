@@ -21,6 +21,8 @@ public class SearchTransformer extends BodyTransformer{
 	private boolean methodIsNeed(SootMethod m){
 		if(m.getDeclaringClass().hasSuperclass())
 			if(m.getDeclaringClass().getSuperclass().toString().equals("android.app.Service")){
+				if(m.getDeclaringClass().getName().equals("android.support.v4.app.NotificationCompatSideChannelService"))
+					return false;
 				if(m.getName().equals("onCreate"))
 					return true;
 				else if(m.getName().equals("onStart"))

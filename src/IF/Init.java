@@ -47,8 +47,8 @@ public class Init{
         
         CallGraph cg = Scene.v().getCallGraph();
         System.out.println(mySearch.getEntryPoints());
-        PathAnalysisOnMethod methodPathAnalysis = new PathAnalysisOnMethod(cg, mySearch.getEntryPoints());
-        methodPathAnalysis.exploreEntryPoints();
+        //PathAnalysisOnMethod methodPathAnalysis = new PathAnalysisOnMethod(cg, mySearch.getEntryPoints());
+        //methodPathAnalysis.exploreEntryPoints();
         return;
 	}
 }

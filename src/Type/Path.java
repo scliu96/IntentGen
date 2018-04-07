@@ -12,25 +12,20 @@ import soot.jimple.toolkits.callgraph.Edge;
 
 public class Path {
 	
-	private SootMethod entryMethod = null;
-	private List<SootMethod> methodPath = new LinkedList<SootMethod>();
-	private List<Stmt> stmtCall = new LinkedList<Stmt>();
+	public SootMethod entryMethod = null;
+	public List<SootMethod> methodPath = new LinkedList<SootMethod>();
+	public List<Stmt> stmtCall = new LinkedList<Stmt>();
 	
-	private Unit entryUnit = null;
 	public List<Unit> unitPath = new LinkedList<Unit>();
 	public Set<String> conds = new LinkedHashSet<String>();
 	public Set<String> decls = new LinkedHashSet<String>();
-	private Intent intent = new Intent();
+	public Intent intent = new Intent();
 	
 	public Path() {
 	}
 	
 	public Path(SootMethod m) {
 		entryMethod = m;
-	}
-	
-	public Path(Unit u) {
-		entryUnit = u;
 	}
 	
 	public Path copy() {
@@ -43,6 +38,15 @@ public class Path {
 		newPath.decls = decls;
 		newPath.intent = intent;
 		return newPath;
+	}
+	
+	public String toUnitString() {
+		String temp = "";
+		for(Unit u : unitPath) {
+			temp.concat(u.toString());
+			temp.concat("->");
+		}
+		return temp;
 	}
 	
 	public boolean addMethod(Edge e) {

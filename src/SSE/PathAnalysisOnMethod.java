@@ -13,7 +13,7 @@ import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 
 public class PathAnalysisOnMethod {
-	private static Logger logger = LogManager.getLogger(PathAnalysisOnMethod.class);
+	//private static Logger logger = LogManager.getLogger(PathAnalysisOnMethod.class);
 	
 	private CallGraph apkCG = new CallGraph();
 	private Set<SootMethod> entryPoints = new LinkedHashSet<SootMethod>();
@@ -26,7 +26,6 @@ public class PathAnalysisOnMethod {
 		this();
 		apkCG = cg;
 		entryPoints.addAll(points);
-		logger.debug("ojbk");
 	}
 	
 	public boolean exploreEntryPoints(){

@@ -53,44 +53,27 @@ public class PathAnalysisOnUnit {
 	public PathAnalysisOnUnit(){
 	}
 	
-	private void doPathAnalysis(SootMethod method) {
-		Body b = method.getActiveBody();
-		PatchingChain<Unit> units = b.getUnits();
-		BriefUnitGraph ug = new BriefUnitGraph(b);
-		String currClassName = method.getDeclaringClass().getName();
-		int totalUnitsToAnalyzeCount = 0;
-		int currUnitToAnalyzeCount = 0;
-		for (final Unit unit : units) {
-			boolean performPathAnalysis = false;
-			synchronized(method) {
-				performPathAnalysis = unitNeedsAnalysis(method, currClassName, unit);
-			}
-			
-			if (performPathAnalysis) {
-				logger.trace("Performing path analysis for unit: " + unit);
-				logger.trace("Currently analyzing unit " + currUnitToAnalyzeCount + " of" + totalUnitsToAnalyzeCount);
-				doPathAnalysisOnUnit(method, ug, currClassName, unit);
-				totalUnitsToAnalyzeCount++;
-				currUnitToAnalyzeCount++;
-				logger.trace("totalUnitsToAnalyzeCount: " + totalUnitsToAnalyzeCount + " , currUnitToAnalyzeCount: "+ currUnitToAnalyzeCount);
-				logger.trace("Finish path analysis on unit: " + unit);
-			}
-		}
-	}
-	
-	private boolean unitNeedsAnalysis(SootMethod method, String currClassName, Unit unit) {
+	private static boolean unitNeedsAnalysis(SootMethod method, String currClassName, Unit unit) {
 		if (unit instanceof InvokeStmt) {
 			InvokeStmt stmt = (InvokeStmt) unit;
 			if ( stmt.getInvokeExpr().getMethod().getName().equals("d") )  {
-				return true;
+				return false;
 			}
 		}
-		return false;
+		return true;
 	}
 	
-	private boolean doPathAnalysisOnUnit(SootMethod method, BriefUnitGraph ug, String currClassName, Unit startingUnit) {
+	private static boolean doPathAnalysisOnUnit(Path path) {
+		SootMethod method = path.entryMethod;
+		Body b = method.getActiveBody();
+		PatchingChain<Unit> units = b.getUnits();
+		BriefUnitGraph ug = new BriefUnitGraph(b);
+		if(units.isEmpty())
+			return false;
+		Unit startingUnit = units.getFirst();
+		
 		boolean isFeasible = false;
-		boolean enumeratePathsOnly = false;
+		//boolean enumeratePathsOnly = false;
 		
 		Set<Unit> discoveredUnits = new LinkedHashSet<Unit>();
 		discoveredUnits.add(startingUnit);
@@ -99,8 +82,8 @@ public class PathAnalysisOnUnit {
 		workUnits.push(startingUnit);
 		
 		Stack<Path> workPaths = new Stack<Path>();
-		Path initialPath = new Path(startingUnit);
-		workPaths.push(initialPath);
+		path.unitPath.add(startingUnit);
+		workPaths.push(path);
 		
 		Set<Path> finalPaths = new LinkedHashSet<Path>();
 		boolean hitPathsLimit = false;
@@ -142,7 +125,7 @@ public class PathAnalysisOnUnit {
 		return isFeasible;
 	}
 	
-	public void analyzeProgramPath(SootMethod method, Path path) {
+	public static void analyzeProgramPath(SootMethod method, Path path) {
 		List<Unit> currPathList = path.unitPath;
 		for(int i = 0; i<currPathList.size();i++) {
 			Unit currUnitInPath = currPathList.get(i);
