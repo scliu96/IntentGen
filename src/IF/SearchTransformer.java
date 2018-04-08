@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import Type.Path;
 import soot.Body;
 import soot.BodyTransformer;
 import soot.SootMethod;
@@ -23,6 +24,7 @@ public class SearchTransformer extends BodyTransformer{
 			if(m.getDeclaringClass().getSuperclass().toString().equals("android.app.Service")){
 				if(m.getDeclaringClass().getName().equals("android.support.v4.app.NotificationCompatSideChannelService"))
 					return false;
+				/*
 				if(m.getName().equals("onCreate"))
 					return true;
 				else if(m.getName().equals("onStart"))
@@ -32,6 +34,8 @@ public class SearchTransformer extends BodyTransformer{
 				else if(m.getName().equals("onBind"))
 					return true;
 				else if(m.getName().equals("onUnbind"))
+					return true;*/
+				if(m.getName().equals("onBind"))
 					return true;
 			}
 		return false;
@@ -39,5 +43,19 @@ public class SearchTransformer extends BodyTransformer{
 	
 	public Set<SootMethod> getEntryPoints(){
 		return entryPoints;
+	}
+	
+	public void printEntryPoints() {
+		for(SootMethod method : entryPoints)
+			System.out.println(method.toString());
+	}
+	
+	public Set<Path> generatePaths(){
+		Set<Path> paths = new LinkedHashSet<Path>();
+		for(SootMethod method : entryPoints) {
+			Path path = new Path(method);
+			paths.add(path);
+		}
+		return paths;
 	}
 }

@@ -1,9 +1,11 @@
 package IF;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import SSE.PathAnalysisOnMethod;
 import SSE.PathAnalysisOnUnit;
+import Type.Path;
 import soot.G;
 import soot.PackManager;
 import soot.Scene;
@@ -19,6 +21,8 @@ public class Init{
 	public final static boolean parallelEnabled = false;
 	public final static boolean pathLimitEnables = true;
 	public static int finalPathsLimit;
+	
+	public static PathAnalysisOnUnit pathAnalysisOnUnit = new PathAnalysisOnUnit();
 	
 	public static void sootInit(){
 		Options.v().set_src_prec(Options.src_prec_apk);
@@ -45,12 +49,18 @@ public class Init{
         PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter",mySearch));
         PackManager.v().runPacks();
         
-        CallGraph cg = Scene.v().getCallGraph();
-        System.out.println(mySearch.getEntryPoints());
+        //CallGraph cg = Scene.v().getCallGraph();
+        //System.out.println(mySearch.getEntryPoints());
         //debug about unit call graph in many ways
         
         //PathAnalysisOnMethod methodPathAnalysis = new PathAnalysisOnMethod(cg, mySearch.getEntryPoints());
         //methodPathAnalysis.exploreEntryPoints();
+        mySearch.printEntryPoints();
+        Set<Path> paths = mySearch.generatePaths();
+        for(Path path : paths) {
+        		PathAnalysisOnUnit.doPathAnalysisOnUnit(path);
+        }
+        
         return;
 	}
 }

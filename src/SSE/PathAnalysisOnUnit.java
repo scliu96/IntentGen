@@ -63,7 +63,7 @@ public class PathAnalysisOnUnit {
 		return true;
 	}
 	
-	private static boolean doPathAnalysisOnUnit(Path path) {
+	public static boolean doPathAnalysisOnUnit(Path path) {
 		SootMethod method = path.entryMethod;
 		Body b = method.getActiveBody();
 		PatchingChain<Unit> units = b.getUnits();
@@ -101,12 +101,13 @@ public class PathAnalysisOnUnit {
 					finalPaths.add(currPath);
 				else hitPathsLimit = true;
 			}
-			
+			System.out.println(startUnitOfCurrPath);
 			for(Unit succ : ug.getSuccsOf(startUnitOfCurrPath)) {
 				if(currPath.containUnit(succ)) {
 					logger.trace("Loop detected while analyze unit "+ succ);
 					continue;
 				}
+				System.out.println("succ:"+succ.toString());
 				
 				logger.trace("Fork the following path on unit " + succ);
 				Path newPath = currPath.copy();
@@ -115,13 +116,14 @@ public class PathAnalysisOnUnit {
 				workUnits.push(succ);
 				logger.trace("WorkingUnits size now is " + workUnits.size());
 			}
+			System.out.println();
 		}
-		
+		/*
 		List<Path> intraPaths = new ArrayList<Path>();
 		for(Path currPath : finalPaths) {
 			analyzeProgramPath(method,currPath);
 		}
-		
+		*/
 		return isFeasible;
 	}
 	
