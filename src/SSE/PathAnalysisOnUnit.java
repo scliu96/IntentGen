@@ -20,6 +20,7 @@ import org.apache.logging.log4j.Logger;
 import IF.Init;
 import Type.MethodPath;
 import Type.MethodPoint;
+import Type.UnitPath;
 import soot.Body;
 import soot.Local;
 import soot.MethodOrMethodContext;
@@ -75,6 +76,7 @@ public class PathAnalysisOnUnit {
 			Stack<Unit> workUnits = new Stack<Unit>();
 			workUnits.push(startingUnit);
 			Stack<UnitPath> workPaths = new Stack<UnitPath>();
+			UnitPath newUp = new UnitPath 
 			
 		}
 		Body b = method.getActiveBody();
