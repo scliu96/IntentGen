@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import Type.Path;
+import Type.MethodPath;
 import soot.Local;
 import soot.SootMethod;
 import soot.Unit;
@@ -49,11 +49,11 @@ public class StmtHandle {
 	/** key: action symbol, value: string constant symbols */
 	private Map<String,Set<String>> actionStrings = new LinkedHashMap<String,Set<String>>();
 	
-	protected final static void handleIfStmt(SootMethod method, Path path, SimpleLocalDefs defs, IfStmt defStmt) {
+	protected final static void handleIfStmt(SootMethod method, MethodPath path, SimpleLocalDefs defs, IfStmt defStmt) {
 		
 	}
 	
-	protected final static void handleIntentGetExtraStmt(SootMethod method, Path path, SimpleLocalDefs defs, DefinitionStmt defStmt) {
+	protected final static void handleIntentGetExtraStmt(SootMethod method, MethodPath path, SimpleLocalDefs defs, DefinitionStmt defStmt) {
 		if (defStmt.containsInvokeExpr() && defStmt.getInvokeExpr() instanceof InstanceInvokeExpr) {
             InstanceInvokeExpr ie = (InstanceInvokeExpr) defStmt.getInvokeExpr();
             int IntentOrBundle = 0; // intent is 1, bundle is 2
@@ -136,7 +136,7 @@ public class StmtHandle {
         }
 	}
 	
-	protected final static void handleIntentGetActionStmt(SootMethod method, Path path, SimpleLocalDefs defs, DefinitionStmt defStmt) {
+	protected final static void handleIntentGetActionStmt(SootMethod method, MethodPath path, SimpleLocalDefs defs, DefinitionStmt defStmt) {
 		InvokeExpr ie = defStmt.getInvokeExpr();
 		if (ie.getMethod().getName().equals("getAction")) {
             if (ie.getMethod().getDeclaringClass().getName().equals("android.content.Intent")) {
@@ -174,7 +174,7 @@ public class StmtHandle {
         }
 	}
 	
-	private static void buildParamRefExpressions(SootMethod method, Path currPath, Unit intentDef, String intentSymbol) {
+	private static void buildParamRefExpressions(SootMethod method, MethodPath currPath, Unit intentDef, String intentSymbol) {
 		if (intentDef instanceof DefinitionStmt) {
             DefinitionStmt defStmt = (DefinitionStmt) intentDef;
             if (!currPath.unitPath.contains(defStmt)) {
@@ -193,7 +193,7 @@ public class StmtHandle {
         }
 	}
 	
-	private static boolean isDefInPathAndLatest(Path path, Unit inDef, Local usedLocal, Unit usedUnit, SimpleLocalDefs defs) {
+	private static boolean isDefInPathAndLatest(MethodPath path, Unit inDef, Local usedLocal, Unit usedUnit, SimpleLocalDefs defs) {
 		if (path.unitPath.contains(inDef)) { // does the path contain the definition
 			for (Unit otherDef : defs.getDefsOfAt(usedLocal,usedUnit)) { // check other defs of usedLocal at usedUnit to determine if inDef is the latestDef in path
 				if (inDef.equals(otherDef)) // continue if inDef equals otherDef

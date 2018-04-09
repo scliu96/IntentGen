@@ -10,43 +10,24 @@ import soot.Unit;
 public class UnitPath {
 	public List<Unit> unitPath = new LinkedList<Unit>();
 	public Set<String> conds = new LinkedHashSet<String>();
-	public Set<String> decls = new LinkedHashSet<String>();
 	
 	public UnitPath() {
 	}
 	
-	public UnitPath(List<Unit> path, Set<String> currConds, Set<String> currDecls) {
-		unitPath = path;
-		conds = currConds;
-		decls = currDecls;
+	public UnitPath(List<Unit> path, Set<String> currConds) {
+		unitPath.addAll(path);
+		conds.addAll(currConds);
 	}
 	
 	public UnitPath copy(UnitPath up) {
-		return new UnitPath(up.unitPath,up.conds,up.decls);
+		return new UnitPath(up.unitPath,up.conds);
 	}
 	
 	public String toUnitString() {
 		String temp = "";
-		for(Unit u : unitPath) {
-			temp.concat(u.toString());
-			temp.concat("->");
-		}
+		for(Unit u : unitPath)
+			temp = temp.concat(u.toString()).concat("->");
 		return temp;
-	}
-	
-	public boolean containUnit(Unit u) {
-		if(unitPath.contains(u))
-			return true;
-		else return false;
-	}
-	
-	public boolean addUnit(Unit u) {
-		if(containUnit(u))
-			return false;
-		else{
-			unitPath.add(u);
-			return true;
-		}
 	}
 	
 }

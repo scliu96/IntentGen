@@ -5,18 +5,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import Type.Path;
+import Type.MethodPoint;
 import soot.Body;
 import soot.BodyTransformer;
 import soot.SootMethod;
 
 public class SearchTransformer extends BodyTransformer{
-	private Set<SootMethod> entryPoints = new LinkedHashSet<SootMethod>();
 	
 	@Override
 	protected void internalTransform(final Body b,String phaseName,final Map<String,String> options){
 		if(methodIsNeed(b.getMethod()))
-			entryPoints.add(b.getMethod());
+			Init.entryPoints.add(b.getMethod());
 	}
 	
 	private boolean methodIsNeed(SootMethod m){
@@ -24,7 +23,6 @@ public class SearchTransformer extends BodyTransformer{
 			if(m.getDeclaringClass().getSuperclass().toString().equals("android.app.Service")){
 				if(m.getDeclaringClass().getName().equals("android.support.v4.app.NotificationCompatSideChannelService"))
 					return false;
-				/*
 				if(m.getName().equals("onCreate"))
 					return true;
 				else if(m.getName().equals("onStart"))
@@ -34,28 +32,10 @@ public class SearchTransformer extends BodyTransformer{
 				else if(m.getName().equals("onBind"))
 					return true;
 				else if(m.getName().equals("onUnbind"))
-					return true;*/
+					return true;
 				if(m.getName().equals("onBind"))
 					return true;
 			}
 		return false;
-	}
-	
-	public Set<SootMethod> getEntryPoints(){
-		return entryPoints;
-	}
-	
-	public void printEntryPoints() {
-		for(SootMethod method : entryPoints)
-			System.out.println(method.toString());
-	}
-	
-	public Set<Path> generatePaths(){
-		Set<Path> paths = new LinkedHashSet<Path>();
-		for(SootMethod method : entryPoints) {
-			Path path = new Path(method);
-			paths.add(path);
-		}
-		return paths;
 	}
 }

@@ -18,7 +18,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import IF.Init;
-import Type.Path;
+import Type.MethodPath;
+import Type.MethodPoint;
 import soot.Body;
 import soot.Local;
 import soot.MethodOrMethodContext;
@@ -48,10 +49,6 @@ import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.scalar.SimpleLocalDefs;
 
 public class PathAnalysisOnUnit {
-	private static Logger logger = LogManager.getLogger(PathAnalysisOnUnit.class);
-	
-	public PathAnalysisOnUnit(){
-	}
 	
 	private static boolean unitNeedsAnalysis(SootMethod method, String currClassName, Unit unit) {
 		if (unit instanceof InvokeStmt) {
@@ -63,8 +60,23 @@ public class PathAnalysisOnUnit {
 		return true;
 	}
 	
-	public static boolean doPathAnalysisOnUnit(Path path) {
-		SootMethod method = path.entryMethod;
+	public static void analysis() {
+		for(SootMethod method : Init.entryPoints) {
+			Body b = method.getActiveBody();
+			PatchingChain<Unit> units = b.getUnits();
+			BriefUnitGraph ug = new BriefUnitGraph(b);
+			
+			if(units.isEmpty())
+				continue;
+			Unit startingUnit = units.getFirst();
+			
+			Set<Unit> discoveredUnits = new LinkedHashSet<Unit>();
+			discoveredUnits.add(startingUnit);
+			Stack<Unit> workUnits = new Stack<Unit>();
+			workUnits.push(startingUnit);
+			Stack<UnitPath> workPaths = new Stack<UnitPath>();
+			
+		}
 		Body b = method.getActiveBody();
 		PatchingChain<Unit> units = b.getUnits();
 		BriefUnitGraph ug = new BriefUnitGraph(b);
@@ -75,24 +87,20 @@ public class PathAnalysisOnUnit {
 		boolean isFeasible = false;
 		//boolean enumeratePathsOnly = false;
 		
-		Set<Unit> discoveredUnits = new LinkedHashSet<Unit>();
-		discoveredUnits.add(startingUnit);
 		
-		Stack<Unit> workUnits = new Stack<Unit>();
-		workUnits.push(startingUnit);
 		
-		Stack<Path> workPaths = new Stack<Path>();
+		Stack<MethodPath> workPaths = new Stack<MethodPath>();
 		path.unitPath.add(startingUnit);
 		workPaths.push(path);
 		
-		Set<Path> finalPaths = new LinkedHashSet<Path>();
+		Set<MethodPath> finalPaths = new LinkedHashSet<MethodPath>();
 		boolean hitPathsLimit = false;
 		
 		while(!workUnits.isEmpty()) {
 			if(workPaths.size() != workUnits.size())
 				logger.warn("WorkingUnits size is different from workPaths size");
 			Unit startUnitOfCurrPath = workUnits.pop();
-			Path currPath = workPaths.pop();
+			MethodPath currPath = workPaths.pop();
 			discoveredUnits.add(startUnitOfCurrPath);
 			
 			if(ug.getSuccsOf(startUnitOfCurrPath).isEmpty()) {
@@ -110,7 +118,7 @@ public class PathAnalysisOnUnit {
 				System.out.println("succ:"+succ.toString());
 				
 				logger.trace("Fork the following path on unit " + succ);
-				Path newPath = currPath.copy();
+				MethodPath newPath = currPath.copy();
 				newPath.addUnit(succ);
 				workPaths.push(newPath);
 				workUnits.push(succ);
@@ -127,7 +135,7 @@ public class PathAnalysisOnUnit {
 		return isFeasible;
 	}
 	
-	public static void analyzeProgramPath(SootMethod method, Path path) {
+	public static void analyzeProgramPath(SootMethod method, MethodPath path) {
 		List<Unit> currPathList = path.unitPath;
 		for(int i = 0; i<currPathList.size();i++) {
 			Unit currUnitInPath = currPathList.get(i);

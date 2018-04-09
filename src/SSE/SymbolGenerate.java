@@ -3,7 +3,7 @@ package SSE;
 import java.util.List;
 import java.util.Set;
 
-import Type.Path;
+import Type.MethodPath;
 import soot.SootMethod;
 import soot.Type;
 import soot.Unit;

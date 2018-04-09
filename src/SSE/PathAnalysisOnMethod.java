@@ -1,61 +1,60 @@
 package SSE;
 
 import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.Stack;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import Type.Path;
+import IF.Init;
+import Type.MethodPoint;
 import soot.SootMethod;
-import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 
 public class PathAnalysisOnMethod {
-	//private static Logger logger = LogManager.getLogger(PathAnalysisOnMethod.class);
 	
-	private CallGraph apkCG = new CallGraph();
-	private Set<SootMethod> entryPoints = new LinkedHashSet<SootMethod>();
-	private Set<Path> paths = new LinkedHashSet<Path>();
-	
-	public PathAnalysisOnMethod() {
-	}
-	
-	public PathAnalysisOnMethod(CallGraph cg, Set<SootMethod> points){
-		this();
-		apkCG = cg;
-		entryPoints.addAll(points);
-	}
-	
-	public boolean exploreEntryPoints(){
-		if(apkCG.size() == 0)
-			return false;
-		else if(entryPoints.isEmpty())
-			return false;
-		for(SootMethod m : entryPoints) {
-			Path newPath = new Path(m);
-			generateMethodPath(m, newPath);
-		}
-		System.out.println(paths.size());
-		return true;
-	}
-	
-	private void generateMethodPath(SootMethod m, Path p) {
-		paths.add(p);
-		Iterator<Edge> outEdges = apkCG.edgesOutOf(m);
-		int count = 0;
-		if(outEdges != null)
-			while(outEdges.hasNext()) {
-				Edge e = outEdges.next();
-				Path newPath = p.copy();
-				if(newPath.addMethod(e)) {
-					generateMethodPath((SootMethod) e.getTgt(), newPath);
-					count++;
+	public static void analysis() throws Exception{
+		if(Init.apkCG.size() == 0)
+			throw new Exception("apkCG is empty");
+		else if(Init.entryPoints.isEmpty())
+			throw new Exception("entryPoints is empty");
+		
+		Stack<MethodPoint> workPoints = new Stack<MethodPoint>();
+		for(SootMethod m : Init.entryPoints)
+			workPoints.push(new MethodPoint(m));
+		
+		while(!workPoints.isEmpty()) {
+			MethodPoint currPoint = workPoints.pop();
+			//System.out.println(currPoint.entryMethod);
+			
+			boolean breakFlag = false;
+			for(MethodPoint mp : Init.methodPoints)
+				if(mp.entryMethod.equals(currPoint.entryMethod)) {
+					breakFlag = true;
+					break;
 				}
-			}
-		if(count != 0)
-			paths.remove(p);
+			if(breakFlag)
+				continue;
+			
+			Iterator<Edge> outEdges = Init.apkCG.edgesOutOf(currPoint.entryMethod);
+			if(outEdges != null)
+				while(outEdges.hasNext()) {
+					Edge e = outEdges.next();
+					SootMethod tgt = (SootMethod) e.getTgt();
+					if(!methodNeedsAnalysis(tgt))
+						continue;
+					currPoint.nextMethods.put(e.srcUnit(), tgt);
+					workPoints.push(new MethodPoint(tgt));
+				}
+			Init.methodPoints.add(currPoint);
+		}
+	}
+	
+	private static boolean methodNeedsAnalysis(SootMethod method) {
+		if(method.isJavaLibraryMethod())
+			return false;
+		if(method.getDeclaringClass().getName().contains("android."))
+			return false;
+		if(!method.hasActiveBody() || method.getName().equals("d"))
+			return false;
+		return true;
 	}
 	
 	/*
