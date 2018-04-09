@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import Type.MethodPath;
+import Type.UnitPath;
 import soot.Local;
 import soot.SootMethod;
 import soot.Unit;
@@ -49,11 +50,11 @@ public class StmtHandle {
 	/** key: action symbol, value: string constant symbols */
 	private Map<String,Set<String>> actionStrings = new LinkedHashMap<String,Set<String>>();
 	
-	protected final static void handleIfStmt(SootMethod method, MethodPath path, SimpleLocalDefs defs, IfStmt defStmt) {
+	protected final static void handleIfStmt(SootMethod method, UnitPath path, SimpleLocalDefs defs, IfStmt defStmt) {
 		
 	}
 	
-	protected final static void handleIntentGetExtraStmt(SootMethod method, MethodPath path, SimpleLocalDefs defs, DefinitionStmt defStmt) {
+	protected final static void handleIntentGetExtraStmt(SootMethod method, UnitPath path, SimpleLocalDefs defs, DefinitionStmt defStmt) {
 		if (defStmt.containsInvokeExpr() && defStmt.getInvokeExpr() instanceof InstanceInvokeExpr) {
             InstanceInvokeExpr ie = (InstanceInvokeExpr) defStmt.getInvokeExpr();
             int IntentOrBundle = 0; // intent is 1, bundle is 2
@@ -136,7 +137,7 @@ public class StmtHandle {
         }
 	}
 	
-	protected final static void handleIntentGetActionStmt(SootMethod method, MethodPath path, SimpleLocalDefs defs, DefinitionStmt defStmt) {
+	protected final static void handleIntentGetActionStmt(SootMethod method, UnitPath path, SimpleLocalDefs defs, DefinitionStmt defStmt) {
 		InvokeExpr ie = defStmt.getInvokeExpr();
 		if (ie.getMethod().getName().equals("getAction")) {
             if (ie.getMethod().getDeclaringClass().getName().equals("android.content.Intent")) {

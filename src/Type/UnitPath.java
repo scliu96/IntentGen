@@ -14,9 +14,19 @@ public class UnitPath {
 	public UnitPath() {
 	}
 	
+	public UnitPath(Unit u) {
+		unitPath.add(u);
+	}
+	
 	public UnitPath(List<Unit> path, Set<String> currConds) {
 		unitPath.addAll(path);
 		conds.addAll(currConds);
+	}
+	
+	public UnitPath(UnitPath up, Unit nextUnit) {
+		unitPath.addAll(up.unitPath);
+		unitPath.add(nextUnit);
+		conds.addAll(up.conds);
 	}
 	
 	public UnitPath copy(UnitPath up) {

@@ -1,49 +1,19 @@
 package SSE;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.regex.Pattern;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import IF.Init;
-import Type.MethodPath;
 import Type.MethodPoint;
 import Type.UnitPath;
 import soot.Body;
-import soot.Local;
-import soot.MethodOrMethodContext;
 import soot.PatchingChain;
 import soot.SootMethod;
-import soot.Type;
 import soot.Unit;
-import soot.Value;
-import soot.ValueBox;
-import soot.jimple.AbstractStmtSwitch;
-import soot.jimple.AssignStmt;
 import soot.jimple.DefinitionStmt;
 import soot.jimple.IfStmt;
-import soot.jimple.InvokeExpr;
 import soot.jimple.InvokeStmt;
 import soot.jimple.Stmt;
-import soot.jimple.StringConstant;
-import soot.jimple.internal.JInterfaceInvokeExpr;
-import soot.jimple.internal.JSpecialInvokeExpr;
-import soot.jimple.internal.JVirtualInvokeExpr;
-import soot.jimple.internal.JimpleLocal;
-import soot.jimple.toolkits.callgraph.CallGraph;
-import soot.jimple.toolkits.callgraph.Edge;
 import soot.toolkits.graph.BriefUnitGraph;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.toolkits.graph.UnitGraph;
@@ -51,18 +21,9 @@ import soot.toolkits.scalar.SimpleLocalDefs;
 
 public class PathAnalysisOnUnit {
 	
-	private static boolean unitNeedsAnalysis(SootMethod method, String currClassName, Unit unit) {
-		if (unit instanceof InvokeStmt) {
-			InvokeStmt stmt = (InvokeStmt) unit;
-			if ( stmt.getInvokeExpr().getMethod().getName().equals("d") )  {
-				return false;
-			}
-		}
-		return true;
-	}
-	
-	public static void analysis() {
-		for(SootMethod method : Init.entryPoints) {
+	public static void analysis() throws Exception {
+		for(MethodPoint methodPoint : Init.methodPoints) {
+			SootMethod method = methodPoint.entryMethod;
 			Body b = method.getActiveBody();
 			PatchingChain<Unit> units = b.getUnits();
 			BriefUnitGraph ug = new BriefUnitGraph(b);
@@ -70,105 +31,91 @@ public class PathAnalysisOnUnit {
 			if(units.isEmpty())
 				continue;
 			Unit startingUnit = units.getFirst();
-			
-			Set<Unit> discoveredUnits = new LinkedHashSet<Unit>();
-			discoveredUnits.add(startingUnit);
 			Stack<Unit> workUnits = new Stack<Unit>();
 			workUnits.push(startingUnit);
 			Stack<UnitPath> workPaths = new Stack<UnitPath>();
-			UnitPath newUp = new UnitPath 
+			UnitPath newUp = new UnitPath(startingUnit);
+			workPaths.push(newUp);
 			
-		}
-		Body b = method.getActiveBody();
-		PatchingChain<Unit> units = b.getUnits();
-		BriefUnitGraph ug = new BriefUnitGraph(b);
-		if(units.isEmpty())
-			return false;
-		Unit startingUnit = units.getFirst();
-		
-		boolean isFeasible = false;
-		//boolean enumeratePathsOnly = false;
-		
-		
-		
-		Stack<MethodPath> workPaths = new Stack<MethodPath>();
-		path.unitPath.add(startingUnit);
-		workPaths.push(path);
-		
-		Set<MethodPath> finalPaths = new LinkedHashSet<MethodPath>();
-		boolean hitPathsLimit = false;
-		
-		while(!workUnits.isEmpty()) {
-			if(workPaths.size() != workUnits.size())
-				logger.warn("WorkingUnits size is different from workPaths size");
-			Unit startUnitOfCurrPath = workUnits.pop();
-			MethodPath currPath = workPaths.pop();
-			discoveredUnits.add(startUnitOfCurrPath);
-			
-			if(ug.getSuccsOf(startUnitOfCurrPath).isEmpty()) {
-				logger.trace("A final path: "+ currPath);
-				if(finalPaths.size() < Init.finalPathsLimit)
-					finalPaths.add(currPath);
-				else hitPathsLimit = true;
-			}
-			System.out.println(startUnitOfCurrPath);
-			for(Unit succ : ug.getSuccsOf(startUnitOfCurrPath)) {
-				if(currPath.containUnit(succ)) {
-					logger.trace("Loop detected while analyze unit "+ succ);
-					continue;
-				}
-				System.out.println("succ:"+succ.toString());
+			//boolean hitPathsLimit = false;
+			Set<UnitPath> finalPaths = new LinkedHashSet<UnitPath>();
+			while(!workUnits.isEmpty()) {
+				if(workPaths.size() != workUnits.size())
+					throw new Exception("workUnits size is different from workPaths size");
 				
-				logger.trace("Fork the following path on unit " + succ);
-				MethodPath newPath = currPath.copy();
-				newPath.addUnit(succ);
-				workPaths.push(newPath);
-				workUnits.push(succ);
-				logger.trace("WorkingUnits size now is " + workUnits.size());
+				Unit currUnit = workUnits.pop();
+				UnitPath currPath = workPaths.pop();
+				if(ug.getSuccsOf(currUnit).isEmpty()) {
+					Init.logger.trace("A final path :" + currPath.toUnitString());
+					if(finalPaths.size() < Init.finalPathsLimit)
+						finalPaths.add(currPath);
+					//else hitPathsLimit = true;
+				}
+				
+				for(Unit succUnit :ug.getSuccsOf(currUnit)) {
+					if(currPath.unitPath.contains(succUnit)){
+						Init.logger.trace("Loop detected while analyze method : "+ method.getName());
+						continue;
+					}
+					Init.logger.trace("Fork the following path on unit " + succUnit);
+					UnitPath newPath = new UnitPath(currPath,succUnit);
+					workUnits.push(succUnit);
+					workPaths.push(newPath);
+					Init.logger.trace("WorkingUnits size now is " + workUnits.size());
+				}
 			}
-			System.out.println();
+			methodPoint.unitPaths = finalPaths;
+			analyzeProgramPath(methodPoint);
 		}
+		
 		/*
 		List<Path> intraPaths = new ArrayList<Path>();
 		for(Path currPath : finalPaths) {
 			analyzeProgramPath(method,currPath);
 		}
 		*/
-		return isFeasible;
 	}
 	
-	public static void analyzeProgramPath(SootMethod method, MethodPath path) {
-		List<Unit> currPathList = path.unitPath;
-		for(int i = 0; i<currPathList.size();i++) {
-			Unit currUnitInPath = currPathList.get(i);
-			Unit predUnit = null;
-			if(i-1<currPathList.size() && i>=1)
-				predUnit = currPathList.get(i-1);
-			UnitGraph unitGraph = null;
-			SimpleLocalDefs defs = null;
-			if(method.hasActiveBody()) {
-				unitGraph = new ExceptionalUnitGraph(method.getActiveBody());
-				synchronized(method) {
+	private static void analyzeProgramPath(MethodPoint methodPoint) {
+		SootMethod method = methodPoint.entryMethod;
+		Set<UnitPath> unitPaths = methodPoint.unitPaths;
+		for(UnitPath currPath : unitPaths)
+			for(int i = 0; i<currPath.unitPath.size(); i++) {
+				Unit currUnitInPath = currPath.unitPath.get(i);
+				if(!unitNeedsAnalysis(currUnitInPath))
+					continue;
+				/*Unit predUnit = null;
+				if(i-1<currPath.unitPath.size() && i>=1)
+					predUnit = currPath.unitPath.get(i-1);*/
+				UnitGraph unitGraph = null;
+				SimpleLocalDefs defs = null;
+				if(method.hasActiveBody()) {
+					unitGraph = new ExceptionalUnitGraph(method.getActiveBody());
 					defs = new SimpleLocalDefs(unitGraph);
 				}
+				else Init.logger.warn("method " + method.getName() + " has no active body");
+				
+				try {
+					Stmt currStmtInPath = (Stmt) currUnitInPath;
+					if(currStmtInPath instanceof IfStmt)
+						StmtHandle.handleIfStmt(method, currPath, defs, (IfStmt) currStmtInPath);
+					else if(currStmtInPath.containsInvokeExpr() && currStmtInPath instanceof DefinitionStmt) {
+						StmtHandle.handleIntentGetExtraStmt(method, currPath, defs, (DefinitionStmt) currStmtInPath);
+						StmtHandle.handleIntentGetActionStmt(method, currPath, defs, (DefinitionStmt) currStmtInPath);
+					}
+					else Init.logger.warn("Not including condition for " + currUnitInPath + " to path constraint");
+				}catch (NullPointerException e) {
+	                e.printStackTrace();
+	            }
 			}
-			else logger.warn("method " + method.getName() + " has no active body");
-			
-			try {
-				Stmt currStmtInPath = (Stmt) currUnitInPath;
-				Set<String> currExprs = new LinkedHashSet<String>();
-				if(currStmtInPath instanceof IfStmt)
-					StmtHandle.handleIfStmt(method, path, defs, (IfStmt) currStmtInPath);
-				else if(currStmtInPath.containsInvokeExpr() && currStmtInPath instanceof DefinitionStmt) {
-					StmtHandle.handleIntentGetExtraStmt(method, path, defs, (DefinitionStmt) currStmtInPath);
-					StmtHandle.handleIntentGetActionStmt(method, path, defs, (DefinitionStmt) currStmtInPath);
-				}
-				else logger.warn("Not including condition for " + currUnitInPath + " to path constraint");
-			}catch (NullPointerException e) {
-                e.printStackTrace();
-            }
-			
-		}
 	}
 	
+	private static boolean unitNeedsAnalysis(Unit unit) {
+		if (unit instanceof InvokeStmt) {
+			InvokeStmt stmt = (InvokeStmt) unit;
+			if ( stmt.getInvokeExpr().getMethod().getName().equals("d") )
+				return false;
+		}
+		return true;
+	}
 }

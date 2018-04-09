@@ -1,6 +1,7 @@
 package Type;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -12,6 +13,7 @@ public class MethodPoint {
 	
 	public SootMethod entryMethod = null;
 	public Map<Unit,SootMethod> nextMethods = new LinkedHashMap<Unit,SootMethod>();
+	public Set<UnitPath> unitPaths = new LinkedHashSet<UnitPath>();
 	
 	public MethodPoint() {
 	}

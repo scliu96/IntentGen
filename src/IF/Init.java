@@ -67,14 +67,9 @@ public class Init{
         apkCG = Scene.v().getCallGraph();
         //debug about unit call graph in many ways
         PathAnalysisOnMethod.analysis();
-        for(MethodPoint mp : methodPoints)
-        		System.out.println(mp.toMethodString());
-        /*mySearch.printEntryPoints();
-        Set<MethodPath> paths = mySearch.generatePaths();
-        for(MethodPath path : paths) {
-        		PathAnalysisOnUnit.doPathAnalysisOnUnit(path);
-        }
-        */
+        //for(MethodPoint mp : methodPoints)
+        //		System.out.println(mp.toMethodString());
+        PathAnalysisOnUnit.analysis();
         return;
 	}
 }
