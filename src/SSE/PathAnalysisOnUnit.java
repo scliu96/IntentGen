@@ -47,6 +47,7 @@ public class PathAnalysisOnUnit {
 				UnitPath currPath = workPaths.pop();
 				if(ug.getSuccsOf(currUnit).isEmpty()) {
 					Init.logger.trace("A final path :" + currPath.toUnitString());
+					System.out.println(currPath.toUnitString());
 					if(finalPaths.size() < Init.finalPathsLimit)
 						finalPaths.add(currPath);
 					//else hitPathsLimit = true;

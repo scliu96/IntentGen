@@ -36,7 +36,8 @@ public class UnitPath {
 	public String toUnitString() {
 		String temp = "";
 		for(Unit u : unitPath)
-			temp = temp.concat(u.toString()).concat("->");
+			temp = temp.concat("->").concat(u.toString()).concat("\n");
+		temp = temp.concat("\n");
 		return temp;
 	}
 	

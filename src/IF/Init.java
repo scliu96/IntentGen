@@ -34,7 +34,7 @@ public class Init{
 	public static Set<MethodPoint> methodPoints = new LinkedHashSet<MethodPoint>();
 	public static Map<UnitPath,Intent> finalPaths = new LinkedHashMap<UnitPath,Intent>(); 
 	
-	public static void sootInit(){
+	private static void sootInit(){
 		soot.G.reset();
 		//G.v().out.close();
 		//;new PrintStream(new File("/Users/apple/Documents/Eclipse/ServiceLeak/log/SootPrint"));
