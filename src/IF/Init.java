@@ -8,8 +8,8 @@ import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import SSE.PathAnalysisOnMethod;
-import SSE.PathAnalysisOnUnit;
+import SSE.MethodAnalysis;
+import SSE.PathAnalysis;
 import Type.Intent;
 import Type.MethodPoint;
 import Type.UnitPath;
@@ -66,10 +66,10 @@ public class Init{
         
         apkCG = Scene.v().getCallGraph();
         //debug about unit call graph in many ways
-        PathAnalysisOnMethod.analysis();
+        MethodAnalysis.analysis();
         //for(MethodPoint mp : methodPoints)
         //		System.out.println(mp.toMethodString());
-        PathAnalysisOnUnit.analysis();
+        PathAnalysis.analysis();
         return;
 	}
 }

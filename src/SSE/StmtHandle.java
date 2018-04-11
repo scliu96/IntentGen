@@ -14,10 +14,12 @@ import org.apache.logging.log4j.Logger;
 
 import IF.Init;
 import Type.UnitPath;
+import soot.ByteType;
 import soot.Local;
 import soot.SootMethod;
 import soot.Unit;
 import soot.Value;
+import soot.jimple.ConditionExpr;
 import soot.jimple.DefinitionStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.InstanceInvokeExpr;
@@ -27,8 +29,16 @@ import soot.jimple.StringConstant;
 import soot.toolkits.scalar.SimpleLocalDefs;
 
 public class StmtHandle {
-	protected final static void handleIfStmt(SootMethod method, UnitPath path, SimpleLocalDefs methodDefs, IfStmt currUnit) {
-		
+	
+	protected final static void handleIfStmt(SootMethod method, UnitPath path, SimpleLocalDefs methodDefs, IfStmt currIfStmt) {
+		Init.logger.trace("Perform path sensitive analysis for IfStmt: " + currIfStmt.toString());
+		ConditionExpr condition = (ConditionExpr) currIfStmt.getCondition();
+		Value opVal1 = condition.getOp1();
+		Value opVal2 = condition.getOp2();
+		boolean generateCondExpr = true;
+		if(opVal1.getType() instanceof ByteType) {
+			Init.logger.trace("opVal1.getType() instanceof ByteType");
+		}
 	}
 	
 	protected final static void handleIntentGetExtraStmt(SootMethod method, UnitPath path, SimpleLocalDefs methodDefs, DefinitionStmt currDefStmt) {
@@ -41,7 +51,7 @@ public class StmtHandle {
             		IntentOrBundle = 2;
             else return;
             
-            Init.logger.debug("Perform path sensitive analysis for getExtra");
+            Init.logger.trace("Perform path sensitive analysis for getExtra: " + currDefStmt.toString());
             Value arg1 = ie.getArg(0);
             Value arg2 = null;
             if(ie.getArgCount()>1)
@@ -123,7 +133,7 @@ public class StmtHandle {
 		InvokeExpr ie = currDefStmt.getInvokeExpr();
 		if (ie.getMethod().getName().equals("getAction")) {
             if (ie.getMethod().getDeclaringClass().getName().equals("android.content.Intent")) {
-                Init.logger.debug("Perform path sensitive analysis for getAction");
+                Init.logger.trace("Perform path sensitive analysis for getAction: "+ currDefStmt.toString());
                 if (ie instanceof InstanceInvokeExpr) {
                     InstanceInvokeExpr iie = (InstanceInvokeExpr)ie;
                     String actionRefSymbol = null;
@@ -158,7 +168,7 @@ public class StmtHandle {
         }
 	}
 	
-	private static boolean isDefInPathAndLatest(UnitPath path, SimpleLocalDefs methodDefs, Unit currUnit, Local usedLocal, Unit usedDefUnit) {
+	protected static boolean isDefInPathAndLatest(UnitPath path, SimpleLocalDefs methodDefs, Unit currUnit, Local usedLocal, Unit usedDefUnit) {
 		if (path.unitPath.contains(usedDefUnit)) { // does path contain definition
 			for (Unit otherDefUnit : methodDefs.getDefsOfAt(usedLocal,currUnit)) { // check other defs of usedLocal at usedUnit to determine
 				if (usedDefUnit.equals(otherDefUnit)) // continue if usedDefUnit equals otherDef

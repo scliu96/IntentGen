@@ -19,7 +19,7 @@ import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.scalar.SimpleLocalDefs;
 
-public class PathAnalysisOnUnit {
+public class PathAnalysis {
 	
 	public static void analysis() throws Exception {
 		for(MethodPoint methodPoint : Init.methodPoints) {
@@ -119,4 +119,13 @@ public class PathAnalysisOnUnit {
 		}
 		return true;
 	}
+	
+	private static void addIntentExtraForPath() {
+		
+	}
+	
+	private static void addIntentCategoryForPath() {
+		
+	}
+	
 }
