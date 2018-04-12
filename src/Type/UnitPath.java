@@ -5,7 +5,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import edu.uci.seal.path.analyses.TargetedPathTransformer.UnitPath;
 import soot.Unit;
 
 public class UnitPath {
