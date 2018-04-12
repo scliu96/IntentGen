@@ -139,26 +139,24 @@ public class StmtHandle {
                     String actionRefSymbol = null;
                     if (currDefStmt.getLeftOp() instanceof Local) {
                         Local leftLocal = (Local)currDefStmt.getLeftOp();
-                        //actionRefSymbol = SymbolGenerate.createSymbol(leftLocal, method, defStmt);
-                        //symbolLocalMap.put(actionRefSymbol,leftLocal);
+                        actionRefSymbol = SymbolGenerate.createSymbol(leftLocal, method, currDefStmt);
 						if (iie.getBase() instanceof Local) {
 							Local intentLocal = (Local) iie.getBase();
 							for (Unit intentDefUnit : methodDefs.getDefsOfAt(intentLocal, currDefStmt)) {
 								if (!isDefInPathAndLatest(path, methodDefs, currDefStmt, intentLocal, intentDefUnit))
 									continue;
-								if (path.unitPath.contains(intentDefUnit)) {
-									/*
-									String intentSymbol = SymbolGenerate.createSymbol(intentLocal, method, intentDef);
+								if (path.path.contains(intentDefUnit)) {
+									String intentSymbol = SymbolGenerate.createSymbol(intentLocal, method, intentDefUnit);
 									String intentDecl = "(declare-const " + intentSymbol + " Object )";
 									String actionRefDecl = "(declare-const " + actionRefSymbol + " String )";
 									path.decls.add(intentDecl);
 									path.decls.add(actionRefDecl);
-									//currDecls.add(getActionDecl);
+									
 									String getActionAssert = "(assert (= (getAction " + intentSymbol + ") " + actionRefSymbol + "))";
 									String newFromIntent = "(assert (= (fromIntent " + actionRefSymbol + ") " + intentSymbol + "))";
 									path.conds.add(getActionAssert);
 									path.conds.add(newFromIntent);
-									buildParamRefExpressions(method, path, intentDef, intentSymbol);*/
+									buildParamRefExpressions(method, path, intentDefUnit, intentSymbol);
 								}
 							}
 						}
@@ -169,13 +167,13 @@ public class StmtHandle {
 	}
 	
 	protected static boolean isDefInPathAndLatest(UnitPath path, SimpleLocalDefs methodDefs, Unit currUnit, Local usedLocal, Unit usedDefUnit) {
-		if (path.unitPath.contains(usedDefUnit)) { // does path contain definition
+		if (path.path.contains(usedDefUnit)) { // does path contain definition
 			for (Unit otherDefUnit : methodDefs.getDefsOfAt(usedLocal,currUnit)) { // check other defs of usedLocal at usedUnit to determine
 				if (usedDefUnit.equals(otherDefUnit)) // continue if usedDefUnit equals otherDef
 					continue;
-				if (!path.unitPath.contains(otherDefUnit)) // if the otherDef is not in path, then continue
+				if (!path.path.contains(otherDefUnit)) // if the otherDef is not in path, then continue
 					continue;
-				List<Unit> pathList = new ArrayList<Unit>(path.unitPath);
+				List<Unit> pathList = new ArrayList<Unit>(path.path);
 				int usedDefPos = pathList.indexOf(usedDefUnit);
 				int otherDefPos = pathList.indexOf(otherDefUnit);
 				if (usedDefPos < otherDefPos)  // if inDef's position in the path is earlier then otherDef's position, then inDef is not the latest definition in the path, so return false
@@ -186,22 +184,21 @@ public class StmtHandle {
 		else return false;
 	}
 	
-	private static void buildParamRefExpressions(SootMethod method, UnitPath currPath, Unit intentDef, String intentSymbol) {
-		if (intentDef instanceof DefinitionStmt) {
-            DefinitionStmt defStmt = (DefinitionStmt) intentDef;
-            if (!currPath.unitPath.contains(defStmt)) {
+	private static void buildParamRefExpressions(SootMethod method, UnitPath currPath, Unit intentDefUnit, String intentSymbol) {
+		if (intentDefUnit instanceof DefinitionStmt) {
+            DefinitionStmt defStmt = (DefinitionStmt) intentDefUnit;
+            if (!currPath.path.contains(defStmt)) {
 				return;
             }
             if (defStmt.getRightOp() instanceof ParameterRef) {
-                ParameterRef pr = (ParameterRef)defStmt.getRightOp();
-                String prSymbol = SymbolGenerate.createParamRefSymbol(defStmt.getLeftOp(),pr.getIndex(),method,defStmt);
+                ParameterRef pr = (ParameterRef) defStmt.getRightOp();
+                String prSymbol = SymbolGenerate.createParamRefSymbol(defStmt.getLeftOp(), pr.getIndex(), method, defStmt);
 
-                /*
                 currPath.decls.add("(declare-const " + prSymbol + " ParamRef)");
                 currPath.conds.add("(assert ( = (index " + prSymbol + ") " + pr.getIndex() + "))");
                 currPath.conds.add("(assert ( = (type " + prSymbol + ") \"" + pr.getType() + "\"))");
                 currPath.conds.add("(assert ( = (method " + prSymbol + ") \"" + method.getDeclaringClass().getName() + "." + method.getName() + "\"))");
-                currPath.conds.add("(assert (= (hasParamRef " + intentSymbol + ") " + prSymbol + "))");*/
+                currPath.conds.add("(assert (= (hasParamRef " + intentSymbol + ") " + prSymbol + "))");
             }
         }
 	}

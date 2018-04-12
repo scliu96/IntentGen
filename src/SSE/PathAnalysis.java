@@ -47,14 +47,14 @@ public class PathAnalysis {
 				UnitPath currPath = workPaths.pop();
 				if(ug.getSuccsOf(currUnit).isEmpty()) {
 					Init.logger.trace("A final path :" + currPath.toUnitString());
-					System.out.println(currPath.toUnitString());
+					//System.out.println(currPath.toUnitString());
 					if(finalPaths.size() < Init.finalPathsLimit)
 						finalPaths.add(currPath);
 					//else hitPathsLimit = true;
 				}
 				
-				for(Unit succUnit :ug.getSuccsOf(currUnit)) {
-					if(currPath.unitPath.contains(succUnit)){
+				for(Unit succUnit : ug.getSuccsOf(currUnit)) {
+					if(currPath.path.contains(succUnit)){
 						Init.logger.trace("Loop detected while analyze method : "+ method.getName());
 						continue;
 					}
@@ -81,8 +81,8 @@ public class PathAnalysis {
 		SootMethod method = methodPoint.entryMethod;
 		Set<UnitPath> unitPaths = methodPoint.unitPaths;
 		for(UnitPath currPath : unitPaths)
-			for(int i = 0; i<currPath.unitPath.size(); i++) {
-				Unit currUnitInPath = currPath.unitPath.get(i);
+			for(int i = 0; i<currPath.path.size(); i++) {
+				Unit currUnitInPath = currPath.path.get(i);
 				if(!unitNeedsAnalysis(currUnitInPath))
 					continue;
 				/*Unit predUnit = null;

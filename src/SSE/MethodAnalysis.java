@@ -50,7 +50,7 @@ public class MethodAnalysis {
 	private static boolean methodNeedsAnalysis(SootMethod method) {
 		if(method.isJavaLibraryMethod())
 			return false;
-		if(method.getDeclaringClass().getName().contains("android."))
+		if(method.getDeclaringClass().getPackageName().startsWith("android."))
 			return false;
 		if(!method.hasActiveBody() || method.getName().equals("d"))
 			return false;

@@ -31,7 +31,11 @@ public class MethodPoint {
 		return new MethodPoint(mp.entryMethod, mp.nextMethods);
 	}
 	
-	public boolean equals(MethodPoint p) {
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		
+		MethodPoint p = (MethodPoint) o;
 		if(p.entryMethod.equals(entryMethod))
 			return true;
 		else return false;
