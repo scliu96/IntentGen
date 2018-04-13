@@ -13,7 +13,7 @@ import soot.jimple.DefinitionStmt;
 import soot.jimple.internal.AbstractJimpleIntBinopExpr;
 import soot.toolkits.scalar.SimpleLocalDefs;
 
-public class FindValue {
+public class ValueFind {
 	
 	private final static void findOriginalVal(SootMethod method, UnitPath currPath, SimpleLocalDefs methodDefs, Unit potentialCmpUnit, Value cmpOp) {
 		if(cmpOp instanceof Local) {

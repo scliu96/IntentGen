@@ -73,18 +73,16 @@ public class StmtHandle {
                 					continue;
                 				if(currDefStmt.getLeftOp() instanceof Local) {
                 					Local extraLocal = (Local) currDefStmt.getLeftOp();
-                					/*
-                					String extraLocalSymbol = SymbolGenerate.createSymbol(extraLocal, method, defStmt);
-                					symbolLocalMap.put(extraLocalSymbol,extraLocal);
-                					String intentSymbol = SymbolGenerate.createSymbol(intentLocal,method,intentDef);
-        							symbolLocalMap.put(intentSymbol,intentLocal);
+                					String extraLocalSymbol = SymbolGenerate.createSymbol(extraLocal, method, currDefStmt);
+                					String intentSymbol = SymbolGenerate.createSymbol(intentLocal,method,intentDefUnit);
+        							
         							String newExtraType = SymbolGenerate.getZ3Type(extraLocal.getType());
 								String newIntentType = SymbolGenerate.getZ3Type(intentLocal.getType());
 								path.decls.add("(declare-const " + extraLocalSymbol + " " + newExtraType + " )");
 								path.decls.add("(declare-const " + intentSymbol + " " + newIntentType + " )");
 								path.conds.add("(assert (= (containsKey " + extraLocalSymbol + " \"" + keyStrConst.value + "\") true))");
 								path.conds.add("(assert (= (fromIntent " + extraLocalSymbol + ") " + intentSymbol + "))");
-								buildParamRefExpressions(method, path, intentDef, intentSymbol);*/
+								buildParamRefExpressions(method, path, intentDefUnit, intentSymbol);
                 				}
                 			}
             			}
@@ -104,20 +102,16 @@ public class StmtHandle {
                             					continue;
                             				
                             				if(currDefStmt.getLeftOp() instanceof Local) {
-                            					Local extrsaLocal = (Local) currDefStmt.getLeftOp();
-                            					/*
-                            					String extraLocalSymbol = SymbolGenerate.createSymbol(extraLocal, method, defStmt);
-                            					//symbolLocalMap.put(extraLocalSymbol,extraLocal);
-                            					String intentSymbol = SymbolGenerate.createSymbol(intentLocal,method,intentDef);
-                    							//symbolLocalMap.put(intentSymbol,intentLocal);
+                            					Local extraLocal = (Local) currDefStmt.getLeftOp();
+                            					String extraLocalSymbol = SymbolGenerate.createSymbol(extraLocal, method, currDefStmt);
+                            					String intentSymbol = SymbolGenerate.createSymbol(intentLocal,method,intentDefUnit);
                     							String newExtraType = SymbolGenerate.getZ3Type(extraLocal.getType());
                     							String newIntentType = SymbolGenerate.getZ3Type(intentLocal.getType());
                     							path.decls.add("(declare-const " + extraLocalSymbol + " " + newExtraType + " )");
                     							path.decls.add("(declare-const " + intentSymbol + " " + newIntentType + " )");
                     							path.conds.add("(assert (= (containsKey " + extraLocalSymbol + " \"" + keyStrConst.value + "\") true))");
                     							path.conds.add("(assert (= (fromIntent " + extraLocalSymbol + ") " + intentSymbol + "))");
-                    							buildParamRefExpressions(method, path, intentDef, intentSymbol);
-                    							*/
+                    							buildParamRefExpressions(method, path, intentDefUnit, intentSymbol);
                             				}
                             			}
             						}
@@ -156,6 +150,7 @@ public class StmtHandle {
 									String newFromIntent = "(assert (= (fromIntent " + actionRefSymbol + ") " + intentSymbol + "))";
 									path.conds.add(getActionAssert);
 									path.conds.add(newFromIntent);
+									
 									buildParamRefExpressions(method, path, intentDefUnit, intentSymbol);
 								}
 							}
