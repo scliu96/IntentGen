@@ -11,9 +11,11 @@ import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.javatuples.Pair;
 
 import IF.Init;
 import Type.UnitPath;
+import soot.BooleanType;
 import soot.ByteType;
 import soot.Local;
 import soot.SootMethod;
@@ -35,9 +37,22 @@ public class StmtHandle {
 		ConditionExpr condition = (ConditionExpr) currIfStmt.getCondition();
 		Value opVal1 = condition.getOp1();
 		Value opVal2 = condition.getOp2();
+		Unit opVal1DefUnit = null;
+		Unit opVal2DefUnit = null;
 		boolean generateCondExpr = true;
+		
 		if(opVal1.getType() instanceof ByteType) {
 			Init.logger.trace("opVal1.getType() instanceof ByteType");
+			Pair<Pair<Value,Unit>,Pair<Value,Unit>> valueDefPair = ValueFind.findValuesOfByteType(method, path, methodDefs, currIfStmt, opVal1);
+			Pair<Value,Unit> left = valueDefPair.getValue0();
+			Pair<Value,Unit> right = valueDefPair.getValue1();
+			opVal1 = left.getValue0();
+			opVal2 = right.getValue0();
+			opVal1DefUnit = left.getValue1();
+			opVal2DefUnit = right.getValue1();
+		}
+		else if(opVal1.getType() instanceof BooleanType) {
+			Init.logger.trace("opVal1.getType() instanceof BooleanType");
 		}
 	}
 	

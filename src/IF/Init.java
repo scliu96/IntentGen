@@ -17,6 +17,7 @@ import soot.PackManager;
 import soot.Scene;
 import soot.SootMethod;
 import soot.Transform;
+import soot.Value;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.options.Options;
 
@@ -33,6 +34,9 @@ public class Init{
 	public static Set<SootMethod> entryPoints = new LinkedHashSet<SootMethod>();
 	public static Set<MethodPoint> methodPoints = new LinkedHashSet<MethodPoint>();
 	public static Map<UnitPath,Intent> finalPaths = new LinkedHashMap<UnitPath,Intent>(); 
+	
+	/** key: a Value corresponding to an Intent extra, value: the string representing the key of the extra data  */
+	public static Map<Value,String> valueKeyMap = new LinkedHashMap<Value,String>();
 	
 	private static void sootInit(){
 		soot.G.reset();
