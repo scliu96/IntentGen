@@ -1,4 +1,4 @@
-package IF;
+package global;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -8,11 +8,9 @@ import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import SSE.MethodAnalysis;
-import SSE.PathAnalysis;
-import Type.Intent;
-import Type.MethodPoint;
-import Type.UnitPath;
+import path.analysis.method.MethodAnalysis;
+import path.analysis.method.SearchTransformer;
+import path.analysis.unit.PathAnalysis;
 import soot.PackManager;
 import soot.Scene;
 import soot.SootMethod;
@@ -20,6 +18,9 @@ import soot.Transform;
 import soot.Value;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.options.Options;
+import type.Intent;
+import type.MethodPoint;
+import type.UnitPath;
 
 public class Init{
 	private final static String androidJarPath="/Users/apple/Documents/Eclipse/android-platforms-master";
@@ -30,13 +31,6 @@ public class Init{
 	public static int finalPathsLimit;
 	
 	public static Logger logger = LogManager.getLogger(Init.class);
-	public static CallGraph apkCG = null;
-	public static Set<SootMethod> entryPoints = new LinkedHashSet<SootMethod>();
-	public static Set<MethodPoint> methodPoints = new LinkedHashSet<MethodPoint>();
-	public static Map<UnitPath,Intent> finalPaths = new LinkedHashMap<UnitPath,Intent>(); 
-	
-	/** key: a Value corresponding to an Intent extra, value: the string representing the key of the extra data  */
-	public static Map<Value,String> valueKeyMap = new LinkedHashMap<Value,String>();
 	
 	private static void sootInit(){
 		soot.G.reset();
@@ -68,7 +62,7 @@ public class Init{
         PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter",mySearch));
         PackManager.v().runPacks();
         
-        apkCG = Scene.v().getCallGraph();
+        Database.apkCG = Scene.v().getCallGraph();
         //debug about unit call graph in many ways
         MethodAnalysis.analysis();
         //for(MethodPoint mp : methodPoints)

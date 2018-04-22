@@ -5,5 +5,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/apache-log4j-2.11.0"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Z3"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Tuples"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -1,4 +1,4 @@
-package Type;
+package type;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;

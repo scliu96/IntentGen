@@ -1,11 +1,7 @@
-package IF;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
+package path.analysis.method;
 import java.util.Map;
-import java.util.Set;
 
-import Type.MethodPoint;
+import global.Database;
 import soot.Body;
 import soot.BodyTransformer;
 import soot.SootMethod;
@@ -15,7 +11,7 @@ public class SearchTransformer extends BodyTransformer{
 	@Override
 	protected void internalTransform(final Body b,String phaseName,final Map<String,String> options){
 		if(methodIsNeed(b.getMethod()))
-			Init.entryPoints.add(b.getMethod());
+			Database.entryPoints.add(b.getMethod());
 	}
 	
 	private boolean methodIsNeed(SootMethod m){

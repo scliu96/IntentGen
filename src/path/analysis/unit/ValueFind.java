@@ -1,31 +1,34 @@
-package SSE;
+package path.analysis.unit;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import org.javatuples.Pair;
-import org.javatuples.Quartet;
 
-import IF.Init;
-import Type.UnitPath;
+import global.Globals;
+import global.Database;
+import global.Init;
+import type.UnitPath;
 import soot.Body;
 import soot.BooleanType;
 import soot.ByteType;
 import soot.Local;
+import soot.SootField;
 import soot.SootMethod;
 import soot.Unit;
 import soot.Value;
 import soot.jimple.Constant;
 import soot.jimple.DefinitionStmt;
+import soot.jimple.FieldRef;
 import soot.jimple.IfStmt;
 import soot.jimple.ParameterRef;
+import soot.jimple.StaticFieldRef;
 import soot.jimple.StringConstant;
+import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.internal.AbstractJimpleIntBinopExpr;
 import soot.jimple.internal.JCastExpr;
 import soot.jimple.internal.JVirtualInvokeExpr;
-import soot.toolkits.graph.BriefUnitGraph;
-import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.scalar.SimpleLocalDefs;
 
 public class ValueFind {
@@ -81,30 +84,26 @@ public class ValueFind {
 									rightVal = findOriginalVal(method,currPath,methodDefs,pseUnit,jviExpr.getArg(0));
 
 									Body b = method.getActiveBody();
-									UnitGraph ug = new BriefUnitGraph(b);
-
 									List<Unit> currPathList = new ArrayList<Unit>(currPath.path);
 									int indexOfUnit = currPathList.indexOf(currUnit);
 									if (indexOfUnit == -1) 
 										throw new RuntimeException(currUnit + " is not in path");
 									Unit succ = currPathList.get(indexOfUnit+1);
 
-									boolean isFallThrough = isFallThrough(ug, currUnit, succ);
+									boolean isFallThrough = isFallThrough(b, currUnit, succ);
 									String newAssert = null;
-									if (isFallThrough) { // intent contains the extra
+									if(isFallThrough) // intent contains the extra
 										newAssert = "(assert (exists ((index Int)) (= (select keys index) " + rightVal.getValue0().toString() + ")))";
-										//addIntentExtraForPath(currPath, rightVal.getValue0().toString(), rightVal.getValue0().getType().toString());
-									} else { // intent does not contain the extra
-										newAssert = "(assert (forall ((index Int)) (not(= (select keys index) " + rightVal.getValue0().toString() + "))))";
-									}
-									leftVal = new Quartet<Value, String, String, Unit>(jviExpr.getBase(), null, newAssert, leftVal.getValue3());
+									else newAssert = "(assert (forall ((index Int)) (not(= (select keys index) " + rightVal.getValue0().toString() + "))))";
+									currPath.conds.add(newAssert);
+									leftVal = new Pair<Value,Unit>(jviExpr.getBase(),leftVal.getValue1());
 								}
-							}
 							}
 						}
 					}
 			}
 		}
+		return new Pair<Pair<Value,Unit>,Pair<Value,Unit>>(leftVal,rightVal);
 	}
 
 	private final static Pair<Value,Unit> findOriginalVal(SootMethod method, UnitPath currPath, SimpleLocalDefs methodDefs, Unit potentialCmpUnit, Value cmpOp) {
@@ -161,6 +160,7 @@ public class ValueFind {
 					if(coiStmt.getRightOp() instanceof StringConstant) {
 						Local local = (Local) coiStmt.getLeftOp();
 						String symbol = SymbolGenerate.createSymbol(local, method, coiStmt);
+						Database.symbolLocalMap.put(symbol, local);
 						StringConstant stringConst = (StringConstant)coiStmt.getRightOp();
 						currPath.conds.add("(assert (= " + symbol + " " + stringConst + " ))");
 						currPath.decls.add("(declare-const " + symbol + " String )");
@@ -184,15 +184,96 @@ public class ValueFind {
 					}
 				}
 			}	
-		Init.valueKeyMap.put(originVal,key);
+		Database.valueKeyMap.put(originVal,key);
 		return new Pair<Value,Unit>(originVal,defUnit);
 	}
 	
-	private static boolean isFallThrough(UnitGraph ug, Unit inUnit, Unit succ) {
-		return (succ == null && inUnit instanceof IfStmt) ? true : icfg.isFallThroughSuccessor(inUnit, succ);
+	private static boolean isFallThrough(Body body, Unit inUnit, Unit succ) {
+		if(succ == null) {
+			 if(inUnit instanceof IfStmt)
+				 return true;
+			 else return false;
+		}
+		if(!inUnit.fallsThrough())
+			return false;
+		return body.getUnits().getSuccOf(inUnit) == succ;
 	}
 	
-	private static String extractKeyFromIntentExtra(DefinitionStmt defStmt, SimpleLocalDefs defs, UnitPath currPath) {
-		return "zzz";
+	private static String extractKeyFromIntentExtra(DefinitionStmt defStmt, SimpleLocalDefs methodDefs, UnitPath currPath) {
+		String key = null;
+		if (defStmt.getRightOp() instanceof JVirtualInvokeExpr) {
+			JVirtualInvokeExpr expr = (JVirtualInvokeExpr) defStmt.getRightOp();
+			boolean keyExtractionEnabled = false;
+			if (Pattern.matches("get.*Extra",expr.getMethod().getName()))
+				if (expr.getMethod().getDeclaringClass().toString().equals("android.content.Intent"))
+					keyExtractionEnabled = true;
+			if (Pattern.matches("has.*Extra",expr.getMethod().getName()))
+				if (expr.getMethod().getDeclaringClass().toString().equals("android.content.Intent"))
+					keyExtractionEnabled = true;
+			if (Globals.bundleExtraDataMethodsSet.contains(expr.getMethod().getName() )) {
+				if (expr.getMethod().getDeclaringClass().getName().equals("android.os.Bundle"))
+					keyExtractionEnabled = true;
+				if (expr.getMethod().getDeclaringClass().getName().equals("android.os.BaseBundle"))
+					keyExtractionEnabled = true;
+			}
+			
+			if (keyExtractionEnabled) {
+				Init.logger.debug("We can extract the key from this expression");
+				if (!(expr.getArg(0) instanceof StringConstant)) {
+					if (expr.getArg(0) instanceof Local) {
+						Local keyLocal = (Local)expr.getArg(0);
+						List<Unit> defUnits = methodDefs.getDefsOfAt(keyLocal,defStmt);
+						for (Unit defUnit : defUnits) {
+							if (!StmtHandle.isDefInPathAndLatest(currPath,methodDefs,defStmt,keyLocal,defUnit))
+								continue;
+							if (defUnit instanceof DefinitionStmt) {
+								DefinitionStmt keyLocalDefStmt = (DefinitionStmt)defUnit;
+								if (keyLocalDefStmt.getRightOp() instanceof VirtualInvokeExpr) {
+									VirtualInvokeExpr invokeExpr = (VirtualInvokeExpr)keyLocalDefStmt.getRightOp();
+									if (invokeExpr.getBase() instanceof Local)
+										if (invokeExpr.getMethod().getDeclaringClass().getType().toString().equals("java.lang.Enum")) {
+											Local base = (Local) invokeExpr.getBase();
+											List<Unit> baseDefs = methodDefs.getDefsOfAt(base, keyLocalDefStmt);
+											for (Unit baseDef : baseDefs) {
+												if (!StmtHandle.isDefInPathAndLatest(currPath,methodDefs,keyLocalDefStmt,base,baseDef))
+													continue;
+												if (baseDef instanceof DefinitionStmt) {
+													DefinitionStmt baseDefStmt = (DefinitionStmt)baseDef;
+													if (baseDefStmt.getRightOp() instanceof FieldRef) {
+														FieldRef fieldRef = (FieldRef)baseDefStmt.getRightOp();
+														if ( fieldRef.getField().getDeclaringClass().toString().equals(invokeExpr.getBase().getType().toString()) )
+															key = fieldRef.getField().getName();
+													}
+												}
+											}
+										
+									}
+									continue;
+								} else if (keyLocalDefStmt.getRightOp() instanceof StaticFieldRef) {
+									SootField keyField = ((StaticFieldRef) keyLocalDefStmt.getRightOp()).getField();
+									SootMethod clinitMethod = keyField.getDeclaringClass().getMethodByName("<clinit>");
+									if (clinitMethod.hasActiveBody()) {
+										Body clinitBody = clinitMethod.getActiveBody();
+										for (Unit clinitUnit : clinitBody.getUnits())
+											if (clinitUnit instanceof DefinitionStmt) {
+												DefinitionStmt clinitDefStmt = (DefinitionStmt) clinitUnit;
+												if (clinitDefStmt.getLeftOp() instanceof StaticFieldRef) {
+													SootField clinitField = ((StaticFieldRef) clinitDefStmt.getLeftOp()).getField();
+													if (clinitField.equals(keyField))
+														if (clinitDefStmt.getRightOp() instanceof StringConstant) {
+															StringConstant clinitStringConst = (StringConstant) clinitDefStmt.getRightOp();
+															key = clinitStringConst.value;
+														}
+												}
+											}
+									}
+								} else throw new RuntimeException("Unhandled case for: " + keyLocalDefStmt.getRightOp());
+							}
+						}
+					}
+				} else key = expr.getArg(0).toString();
+			}
+		}
+		return key;
 	}
 }

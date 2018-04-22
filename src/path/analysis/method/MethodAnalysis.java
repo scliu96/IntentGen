@@ -1,23 +1,24 @@
-package SSE;
+package path.analysis.method;
 
 import java.util.Iterator;
 import java.util.Stack;
 
-import IF.Init;
-import Type.MethodPoint;
+import global.Database;
+import global.Init;
 import soot.SootMethod;
 import soot.jimple.toolkits.callgraph.Edge;
+import type.MethodPoint;
 
 public class MethodAnalysis {
 	
 	public static void analysis() throws Exception{
-		if(Init.apkCG.size() == 0)
+		if(Database.apkCG.size() == 0)
 			throw new Exception("apkCG is empty");
-		else if(Init.entryPoints.isEmpty())
+		else if(Database.entryPoints.isEmpty())
 			throw new Exception("entryPoints is empty");
 		
 		Stack<MethodPoint> workPoints = new Stack<MethodPoint>();
-		for(SootMethod m : Init.entryPoints)
+		for(SootMethod m : Database.entryPoints)
 			workPoints.push(new MethodPoint(m));
 		
 		while(!workPoints.isEmpty()) {
@@ -25,7 +26,7 @@ public class MethodAnalysis {
 			//System.out.println(currPoint.entryMethod);
 			
 			boolean breakFlag = false;
-			for(MethodPoint mp : Init.methodPoints)
+			for(MethodPoint mp : Database.methodPointsMap.values())
 				if(mp.entryMethod.equals(currPoint.entryMethod)) {
 					breakFlag = true;
 					break;
@@ -33,7 +34,7 @@ public class MethodAnalysis {
 			if(breakFlag)
 				continue;
 			
-			Iterator<Edge> outEdges = Init.apkCG.edgesOutOf(currPoint.entryMethod);
+			Iterator<Edge> outEdges = Database.apkCG.edgesOutOf(currPoint.entryMethod);
 			if(outEdges != null)
 				while(outEdges.hasNext()) {
 					Edge e = outEdges.next();
@@ -43,7 +44,7 @@ public class MethodAnalysis {
 					currPoint.nextMethods.put(e.srcUnit(), tgt);
 					workPoints.push(new MethodPoint(tgt));
 				}
-			Init.methodPoints.add(currPoint);
+			Database.methodPointsMap.put(currPoint.entryMethod, currPoint);
 		}
 	}
 	
@@ -61,36 +62,8 @@ public class MethodAnalysis {
 	private void judgeStmt(Intent intent,Stmt stmt){
 		if(stmt.containsInvokeExpr()){
 			Value v = stmt.getInvokeExprBox().getValue();
-			if(v instanceof JVirtualInvokeExpr){
+			if(v instanceof JVirtualInvokeExpr){JSpecialInvokeExpr
 				JVirtualInvokeExpr jv = (JVirtualInvokeExpr) v;
-				Value base = jv.getBase();
-				if(base.getType().toString().equals("android.content.Intent") &&
-						Pattern.matches("get.*Extra", jv.getMethodRef().toString()) ){
-					if(jv.getArgCount() > 0){
-						Value extraKeyValue = jv.getArg(0);
-						if(extraKeyValue instanceof StringConstant)
-							intent.addProperty( ((StringConstant)extraKeyValue).value, jv.getType());
-						else if(extraKeyValue instanceof Local){
-							Local extraKeyLocal = (Local) extraKeyValue;
-							intent.addProperty(extraKeyLocal.getName(), jv.getType());
-						}
-					}
-				}
-				else if(base.getType().toString().equals("android.os.Bundle") &&
-						Pattern.matches("get.*", jv.getMethodRef().toString()) ){
-					if(jv.getArgCount() > 0){
-						Value extraKeyValue = jv.getArg(0);
-						if(extraKeyValue instanceof StringConstant)
-							intent.addProperty( ((StringConstant)extraKeyValue).value, jv.getType());
-						else if(extraKeyValue instanceof Local){
-							Local extraKeyLocal = (Local) extraKeyValue;
-							intent.addProperty(extraKeyLocal.getName(), jv.getType());
-						}
-					}
-				}
-			}
-			else if(v instanceof JSpecialInvokeExpr){
-				JSpecialInvokeExpr jv = (JSpecialInvokeExpr) v;
 				Value base = jv.getBase();
 				if(base.getType().toString().equals("android.content.Intent") &&
 						Pattern.matches("get.*Extra", jv.getMethodRef().toString()) ){

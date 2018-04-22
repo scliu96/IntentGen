@@ -1,11 +1,10 @@
-package SSE;
+package path.analysis.unit;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Stack;
 
-import IF.Init;
-import Type.MethodPoint;
-import Type.UnitPath;
+import global.Init;
+import global.Database;
 import soot.Body;
 import soot.PatchingChain;
 import soot.SootMethod;
@@ -18,11 +17,13 @@ import soot.toolkits.graph.BriefUnitGraph;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.scalar.SimpleLocalDefs;
+import type.MethodPoint;
+import type.UnitPath;
 
 public class PathAnalysis {
 	
 	public static void analysis() throws Exception {
-		for(MethodPoint methodPoint : Init.methodPoints) {
+		for(MethodPoint methodPoint : Database.methodPointsMap.values()) {
 			SootMethod method = methodPoint.entryMethod;
 			Body b = method.getActiveBody();
 			PatchingChain<Unit> units = b.getUnits();
@@ -66,7 +67,8 @@ public class PathAnalysis {
 				}
 			}
 			methodPoint.unitPaths = finalPaths;
-			analyzeProgramPath(methodPoint);
+			// find all path in one method
+			analyzeUnitPathInMethod(methodPoint);
 		}
 		
 		/*
@@ -77,7 +79,7 @@ public class PathAnalysis {
 		*/
 	}
 	
-	private static void analyzeProgramPath(MethodPoint methodPoint) {
+	private static void analyzeUnitPathInMethod(MethodPoint methodPoint) {
 		SootMethod method = methodPoint.entryMethod;
 		Set<UnitPath> unitPaths = methodPoint.unitPaths;
 		for(UnitPath currPath : unitPaths)
@@ -85,9 +87,6 @@ public class PathAnalysis {
 				Unit currUnitInPath = currPath.path.get(i);
 				if(!unitNeedsAnalysis(currUnitInPath))
 					continue;
-				/*Unit predUnit = null;
-				if(i-1<currPath.unitPath.size() && i>=1)
-					predUnit = currPath.unitPath.get(i-1);*/
 				UnitGraph unitGraph = null;
 				SimpleLocalDefs defs = null;
 				if(method.hasActiveBody()) {
@@ -119,13 +118,4 @@ public class PathAnalysis {
 		}
 		return true;
 	}
-	
-	private static void addIntentExtraForPath() {
-		
-	}
-	
-	private static void addIntentCategoryForPath() {
-		
-	}
-	
 }

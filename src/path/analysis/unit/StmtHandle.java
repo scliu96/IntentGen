@@ -1,7 +1,6 @@
-package SSE;
+package path.analysis.unit;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -13,8 +12,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.javatuples.Pair;
 
-import IF.Init;
-import Type.UnitPath;
+import global.Database;
+import global.Init;
 import soot.BooleanType;
 import soot.ByteType;
 import soot.Local;
@@ -29,6 +28,7 @@ import soot.jimple.InvokeExpr;
 import soot.jimple.ParameterRef;
 import soot.jimple.StringConstant;
 import soot.toolkits.scalar.SimpleLocalDefs;
+import type.UnitPath;
 
 public class StmtHandle {
 	
@@ -54,7 +54,7 @@ public class StmtHandle {
 		else if(opVal1.getType() instanceof BooleanType) {
 			Init.logger.trace("opVal1.getType() instanceof BooleanType");
 		}
-	}
+	}	
 	
 	protected final static void handleIntentGetExtraStmt(SootMethod method, UnitPath path, SimpleLocalDefs methodDefs, DefinitionStmt currDefStmt) {
 		if (currDefStmt.containsInvokeExpr() && currDefStmt.getInvokeExpr() instanceof InstanceInvokeExpr) {
@@ -71,13 +71,13 @@ public class StmtHandle {
             Value arg2 = null;
             if(ie.getArgCount()>1)
             		arg2 = ie.getArg(1);
-            String extraType = null;
-            if(arg2 != null)
-            		extraType = arg2.getType().toString();
-            else extraType = ie.getMethod().getReturnType().toString();
-            String arg2Str = "unknown";
-            if(arg2 != null)
-            		arg2Str = arg2.toString();
+            //String extraType = null;
+            //if(arg2 != null)
+            //		extraType = arg2.getType().toString();
+            //else extraType = ie.getMethod().getReturnType().toString();
+            //String arg2Str = "unknown";
+            //if(arg2 != null)
+            //		arg2Str = arg2.toString();
             if(arg1 instanceof StringConstant) {
             		StringConstant keyStrConst = (StringConstant) arg1;
             		if(ie.getBase() instanceof Local) {
@@ -89,9 +89,10 @@ public class StmtHandle {
                 				if(currDefStmt.getLeftOp() instanceof Local) {
                 					Local extraLocal = (Local) currDefStmt.getLeftOp();
                 					String extraLocalSymbol = SymbolGenerate.createSymbol(extraLocal, method, currDefStmt);
+                					Database.symbolLocalMap.put(extraLocalSymbol, extraLocal);
                 					String intentSymbol = SymbolGenerate.createSymbol(intentLocal,method,intentDefUnit);
-        							
-        							String newExtraType = SymbolGenerate.getZ3Type(extraLocal.getType());
+                					Database.symbolLocalMap.put(intentSymbol, intentLocal);
+                					String newExtraType = SymbolGenerate.getZ3Type(extraLocal.getType());
 								String newIntentType = SymbolGenerate.getZ3Type(intentLocal.getType());
 								path.decls.add("(declare-const " + extraLocalSymbol + " " + newExtraType + " )");
 								path.decls.add("(declare-const " + intentSymbol + " " + newIntentType + " )");
@@ -119,8 +120,10 @@ public class StmtHandle {
                             				if(currDefStmt.getLeftOp() instanceof Local) {
                             					Local extraLocal = (Local) currDefStmt.getLeftOp();
                             					String extraLocalSymbol = SymbolGenerate.createSymbol(extraLocal, method, currDefStmt);
+                            					Database.symbolLocalMap.put(extraLocalSymbol, extraLocal);
                             					String intentSymbol = SymbolGenerate.createSymbol(intentLocal,method,intentDefUnit);
-                    							String newExtraType = SymbolGenerate.getZ3Type(extraLocal.getType());
+                            					Database.symbolLocalMap.put(intentSymbol, intentLocal);
+                            					String newExtraType = SymbolGenerate.getZ3Type(extraLocal.getType());
                     							String newIntentType = SymbolGenerate.getZ3Type(intentLocal.getType());
                     							path.decls.add("(declare-const " + extraLocalSymbol + " " + newExtraType + " )");
                     							path.decls.add("(declare-const " + intentSymbol + " " + newIntentType + " )");
@@ -156,6 +159,7 @@ public class StmtHandle {
 									continue;
 								if (path.path.contains(intentDefUnit)) {
 									String intentSymbol = SymbolGenerate.createSymbol(intentLocal, method, intentDefUnit);
+									Database.symbolLocalMap.put(intentSymbol, intentLocal);
 									String intentDecl = "(declare-const " + intentSymbol + " Object )";
 									String actionRefDecl = "(declare-const " + actionRefSymbol + " String )";
 									path.decls.add(intentDecl);
