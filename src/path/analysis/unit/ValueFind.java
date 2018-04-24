@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.javatuples.Pair;
+import org.javatuples.Quartet;
 
 import global.Globals;
 import global.Database;
@@ -22,13 +23,17 @@ import soot.jimple.Constant;
 import soot.jimple.DefinitionStmt;
 import soot.jimple.FieldRef;
 import soot.jimple.IfStmt;
+import soot.jimple.InstanceInvokeExpr;
 import soot.jimple.ParameterRef;
 import soot.jimple.StaticFieldRef;
+import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
 import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.internal.AbstractJimpleIntBinopExpr;
 import soot.jimple.internal.JCastExpr;
 import soot.jimple.internal.JVirtualInvokeExpr;
+import soot.toolkits.graph.BriefUnitGraph;
+import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.scalar.SimpleLocalDefs;
 
 public class ValueFind {
@@ -59,7 +64,7 @@ public class ValueFind {
 		return new Pair<Pair<Value,Unit>,Pair<Value,Unit>>(leftVal,rightVal);
 	}
 	
-	public final static Pair<Pair<Value,Unit>,Pair<Value,Unit>> findValuesOfBoolType(SootMethod method, UnitPath currPath, SimpleLocalDefs methodDefs, Unit currUnit, Value value){
+	protected final static Pair<Pair<Value,Unit>,Pair<Value,Unit>> findValuesOfBoolType(SootMethod method, UnitPath currPath, SimpleLocalDefs methodDefs, Unit currUnit, Value value){
 		Pair<Value,Unit> leftVal = null;
 		Pair<Value,Unit> rightVal = null;
 		if(value instanceof Local) {
@@ -106,6 +111,72 @@ public class ValueFind {
 		return new Pair<Pair<Value,Unit>,Pair<Value,Unit>>(leftVal,rightVal);
 	}
 
+	protected final static Pair<Pair<Value,Unit>,Pair<Value,Unit>> findValuesOfBundleType(SootMethod method, UnitPath currPath, SimpleLocalDefs methodDefs, Unit currUnit, Value value){
+		Pair<Value,Unit> leftVal = null;
+		Pair<Value,Unit> rightVal = null;
+		if(value instanceof Local) {
+			Local local = (Local) value;
+			if(local.getType() instanceof BooleanType)
+				for(Unit defUnit : methodDefs.getDefsOfAt(local, currUnit))
+					if(StmtHandle.isDefInPathAndLatest(currPath, methodDefs, currUnit, local, defUnit)) {
+						Stmt defStmt = (Stmt) currUnit;
+						if(defStmt.containsInvokeExpr())
+							if(defStmt.getInvokeExpr() instanceof InstanceInvokeExpr) {
+								InstanceInvokeExpr ie = (InstanceInvokeExpr) defStmt.getInvokeExpr();
+								if(ie.getMethod().getDeclaringClass().getName().equals("android.os.bundle"))
+									if(ie.getMethod().getName().equals("containsKey")) {
+										Value keyVal = ie.getArg(0);
+										if(keyVal instanceof StringConstant) {
+											StringConstant keyStringConst = (StringConstant) keyVal;
+											String keyString = keyStringConst.value;
+											if(ie.getBase() instanceof Local) {
+												Local bundleLocal = (Local) ie.getBase();
+												for(Unit bundleDef : methodDefs.getDefsOfAt(bundleLocal, defStmt))
+													if(StmtHandle.isDefInPathAndLatest(currPath, methodDefs, defUnit, bundleLocal, bundleDef)) {
+														Stmt bundleStmt = (Stmt) bundleDef;
+														if(bundleStmt.containsInvokeExpr())
+															if(bundleStmt.getInvokeExpr() instanceof InstanceInvokeExpr) {
+																InstanceInvokeExpr bundleInvoke = (InstanceInvokeExpr) bundleStmt.getInvokeExpr();
+																if(bundleInvoke.getMethod().getDeclaringClass().getName().equals("android.content.Intent"))
+																	if(bundleInvoke.getMethod().getName().equals("getExtras"))
+																		if(bundleInvoke.getBase() instanceof Local) {
+																			Local intentLocal = (Local) bundleInvoke.getBase();
+																			for(Unit intentDef : methodDefs.getDefsOfAt(intentLocal, bundleStmt))
+																				if(StmtHandle.isDefInPathAndLatest(currPath, methodDefs, bundleStmt, intentLocal, intentDef)) {
+																					String intentLocalSymbol = SymbolGenerate.createSymbol(intentLocal, method, intentDef);
+																					Database.symbolLocalMap.put(intentLocalSymbol, intentLocal);
+																					String newDecl = "(declare-const " +  intentLocalSymbol + " Object )";
+																					String newAssert = "(assert (= " + intentLocalSymbol + " NotNull))";
+
+																					Body b = method.getActiveBody();
+																					List<Unit> currPathList = new ArrayList<Unit>(currPath.path);
+																					int indexOfUnit = currPathList.indexOf(currUnit);
+																					if (indexOfUnit == -1) 
+																						throw new RuntimeException(currUnit + " is not in path");
+																					Unit succ = currPathList.get(indexOfUnit+1);
+
+																					boolean isFallThrough = isFallThrough(b, currUnit, succ);
+																					if(isFallThrough) // intent contains the extra
+																						newAssert += "\n(assert (= (containsKey " + intentLocalSymbol + " \"" + keyString + "\") true))";
+																					else newAssert += "\n(assert (= (containsKey " + intentLocalSymbol + " \"" + keyString + "\") false))";
+																					currPath.conds.add(newAssert);
+																					
+
+																					leftVal = new Pair<Value,Unit>(intentLocal,intentDef);
+																				}
+																		}
+																
+															}
+													}
+											}
+										}
+									}
+							}
+					}
+		}
+		return new Pair<Pair<Value,Unit>,Pair<Value,Unit>>(leftVal,rightVal);
+	}
+	
 	private final static Pair<Value,Unit> findOriginalVal(SootMethod method, UnitPath currPath, SimpleLocalDefs methodDefs, Unit potentialCmpUnit, Value cmpOp) {
 		Value originVal = null;
 		Unit defUnit = null;
@@ -275,5 +346,23 @@ public class ValueFind {
 			}
 		}
 		return key;
+	}
+	
+	protected final static void findKeysForLRValues(SimpleLocalDefs methodDefs, UnitPath currPath, Unit currUnit, Value value1, Value value2) {
+		findKeyForValue(methodDefs,currPath,currUnit,value1);
+		findKeyForValue(methodDefs,currPath,currUnit,value2);
+	}
+	
+	private final static void findKeyForValue(SimpleLocalDefs methodDefs, UnitPath currPath, Unit currUnit, Value value) {
+		if(value instanceof Local) {
+			Local local = (Local) value;
+			for(Unit defUnit : methodDefs.getDefsOfAt(local, currUnit))
+				if(StmtHandle.isDefInPathAndLatest(currPath, methodDefs, currUnit, local, defUnit))
+					if(defUnit instanceof DefinitionStmt) {
+						DefinitionStmt defStmt = (DefinitionStmt) defUnit;
+						String key = extractKeyFromIntentExtra(defStmt,methodDefs,currPath);
+						Database.valueKeyMap.put(value, key);
+					}
+		}
 	}
 }

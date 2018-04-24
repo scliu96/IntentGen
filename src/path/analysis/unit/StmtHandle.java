@@ -53,6 +53,40 @@ public class StmtHandle {
 		}
 		else if(opVal1.getType() instanceof BooleanType) {
 			Init.logger.trace("opVal1.getType() instanceof BooleanType");
+			Pair<Pair<Value,Unit>,Pair<Value,Unit>> valueDefPair = ValueFind.findValuesOfBoolType(method, path, methodDefs, currIfStmt, opVal1);
+			Pair<Value,Unit> left = valueDefPair.getValue0();
+			Pair<Value,Unit> right = valueDefPair.getValue1();
+		
+			if(left == null) {
+				valueDefPair = ValueFind.findValuesOfBundleType(method, path, methodDefs, currIfStmt, opVal1);
+				left = valueDefPair.getValue0();
+				right = valueDefPair.getValue1();
+				if(left != null || right != null)
+					generateCondExpr = false;
+				if(left != null) {
+					opVal1 = left.getValue0();
+					opVal1DefUnit = left.getValue1();
+				}
+				if(right != null) {
+					opVal2 = right.getValue0();
+					opVal2DefUnit = right.getValue1();
+				}
+			}
+			
+			if(left != null && right != null) {
+				if(left.getValue0() == null && right.getValue0() == null)
+					ValueFind.findKeysForLRValues(methodDefs,path,currIfStmt,opVal1,opVal2);
+				else {
+					opVal1 = left.getValue0();
+					opVal1DefUnit = left.getValue1();
+					opVal2 = right.getValue0();
+					opVal2DefUnit = right.getValue1();
+				}
+			}
+			
+			if(left == null && right == null) {
+				
+			}
 		}
 	}	
 	
