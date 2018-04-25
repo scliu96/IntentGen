@@ -14,6 +14,7 @@ import org.javatuples.Pair;
 
 import global.Database;
 import global.Init;
+import path.analysis.solver.Solve;
 import soot.BooleanType;
 import soot.ByteType;
 import soot.Local;
@@ -37,6 +38,8 @@ public class StmtHandle {
 		ConditionExpr condition = (ConditionExpr) currIfStmt.getCondition();
 		Value opVal1 = condition.getOp1();
 		Value opVal2 = condition.getOp2();
+		Value opVal1Org = opVal1;
+		Value opVal2Org = opVal2;
 		Unit opVal1DefUnit = null;
 		Unit opVal2DefUnit = null;
 		boolean generateCondExpr = true;
@@ -85,9 +88,65 @@ public class StmtHandle {
 			}
 			
 			if(left == null && right == null) {
-				
+				valueDefPair = ValueFind.findCategories(method, path, methodDefs, currIfStmt, opVal1);
+				left = valueDefPair.getValue0();
+				right = valueDefPair.getValue1();
+				if(left != null || right != null)
+					generateCondExpr = false;
+				if(left != null) {
+					opVal1 = left.getValue0();
+					opVal1DefUnit = left.getValue1();
+				}
+				if(right != null) {
+					opVal2 = right.getValue0();
+					opVal2DefUnit = right.getValue1();
+				}
 			}
 		}
+		else {
+			Init.logger.trace("else branch, simply invoking findKeysForLeftAndRightValues(...)");
+			ValueFind.findKeysForLRValues(methodDefs, path, currIfStmt, opVal1, opVal2);
+			opVal1DefUnit = ValueFind.getDefOfValInPath(methodDefs, path, currIfStmt, opVal1);
+			opVal2DefUnit = ValueFind.getDefOfValInPath(methodDefs, path, currIfStmt, opVal2);
+		}
+		
+		String opExpr1 = null;
+		String opExpr2 = null;
+		try {
+			if (opVal1 == null) {
+				Init.logger.debug("Could not resolve opVal1, so setting it to true");
+				opExpr1 = "";
+			} else opExpr1 = SymbolGenerate.createZ3Expr(method,path,currIfStmt,opVal1,opVal1DefUnit);
+			
+			if (opVal2 == null) {
+				Init.logger.debug("Could not resolve opVal2, so setting it to true");
+				opExpr2 = "";
+			} else opExpr2 = SymbolGenerate.createZ3Expr(method,path,currIfStmt,opVal2,opVal2DefUnit);
+		} catch (RuntimeException e) {
+			Init.logger.warn("caught exception: ", e);
+			return;
+		}
+		
+		Unit succUnit = null;
+		int index = path.path.indexOf(currIfStmt) + 1;
+		if(index < path.path.size())
+			succUnit = path.path.get(index);
+		
+		boolean isFallThrough = ValueFind.isFallThrough(method.getActiveBody(), currIfStmt, succUnit);
+		String branchSensitiveSymbol = null;
+		if(isFallThrough) {
+			if(opVal1Org.getType() instanceof BooleanType)
+				branchSensitiveSymbol = condition.getSymbol();
+			else branchSensitiveSymbol = SymbolGenerate.negateSymbol(condition.getSymbol());
+		}
+		else {
+			if(opVal1Org.getType() instanceof BooleanType)
+				branchSensitiveSymbol = SymbolGenerate.negateSymbol(condition.getSymbol());
+			else branchSensitiveSymbol = condition.getSymbol();
+		}
+		
+		if(generateCondExpr)
+			path.conds.add(SymbolGenerate.buildZ3CondExpr(opExpr1,opExpr2,branchSensitiveSymbol));
 	}	
 	
 	protected final static void handleIntentGetExtraStmt(SootMethod method, UnitPath path, SimpleLocalDefs methodDefs, DefinitionStmt currDefStmt) {

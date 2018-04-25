@@ -177,6 +177,55 @@ public class ValueFind {
 		return new Pair<Pair<Value,Unit>,Pair<Value,Unit>>(leftVal,rightVal);
 	}
 	
+	protected final static Pair<Pair<Value,Unit>,Pair<Value,Unit>> findCategories(SootMethod method, UnitPath currPath, SimpleLocalDefs methodDefs, Unit currUnit, Value value){
+		Pair<Value,Unit> leftVal = null;
+		Pair<Value,Unit> rightVal = null;
+		if(value instanceof Local) {
+			Local local = (Local) value;
+			if(local.getType() instanceof BooleanType)
+				for(Unit pseUnit : methodDefs.getDefsOfAt(local, currUnit))
+					if(StmtHandle.isDefInPathAndLatest(currPath, methodDefs, currUnit, local, pseUnit)) {
+						Init.logger.trace("Found potential string equal comparison statement: " + pseUnit);
+						if(pseUnit instanceof DefinitionStmt) {
+							DefinitionStmt defStmt = (DefinitionStmt) pseUnit;
+							if(defStmt.getRightOp() instanceof JVirtualInvokeExpr) {
+								JVirtualInvokeExpr jviExpr = (JVirtualInvokeExpr) defStmt.getRightOp();
+								if (jviExpr.getMethod().getName().equals("hasCategory") && jviExpr.getMethod().getDeclaringClass().getName().equals("android.content.Intent"))
+									if(jviExpr.getBase() instanceof Local){
+										Local intentLocal = (Local) jviExpr.getBase();
+										for(Unit intentDef : methodDefs.getDefsOfAt(intentLocal, defStmt))
+											if(StmtHandle.isDefInPathAndLatest(currPath, methodDefs, defStmt, intentLocal, intentDef)) {
+												String intentSymbol = SymbolGenerate.createSymbol(intentLocal, method, intentDef);
+												Database.symbolLocalMap.put(intentSymbol, intentLocal);
+												
+												String category = null;
+												if(jviExpr.getArg(0) instanceof StringConstant)
+													category = ((StringConstant) jviExpr.getArg(0)).value;
+												
+												Body b = method.getActiveBody();
+												List<Unit> currPathList = new ArrayList<Unit>(currPath.path);
+												int indexOfUnit = currPathList.indexOf(currUnit);
+												if (indexOfUnit == -1) 
+													throw new RuntimeException(currUnit + " is not in path");
+												Unit succ = currPathList.get(indexOfUnit+1);
+
+												boolean isFallThrough = isFallThrough(b, currUnit, succ);
+												String newAssert = null;
+												if (isFallThrough)
+													newAssert = "(assert (exists ((index Int)) (= (select cats index) \"" + category + "\")))";
+												else newAssert = "(assert (forall ((index Int)) (not(= (select cats index) \"" + category + "\"))))";
+												currPath.conds.add(newAssert);
+												leftVal = new Pair<Value,Unit>(intentLocal,intentDef);
+											}
+									}
+							}
+						}
+					}
+		}
+		return new Pair<Pair<Value,Unit>,Pair<Value,Unit>>(leftVal,rightVal);
+	}
+	
+	
 	private final static Pair<Value,Unit> findOriginalVal(SootMethod method, UnitPath currPath, SimpleLocalDefs methodDefs, Unit potentialCmpUnit, Value cmpOp) {
 		Value originVal = null;
 		Unit defUnit = null;
@@ -259,7 +308,7 @@ public class ValueFind {
 		return new Pair<Value,Unit>(originVal,defUnit);
 	}
 	
-	private static boolean isFallThrough(Body body, Unit inUnit, Unit succ) {
+	protected static boolean isFallThrough(Body body, Unit inUnit, Unit succ) {
 		if(succ == null) {
 			 if(inUnit instanceof IfStmt)
 				 return true;
@@ -364,5 +413,16 @@ public class ValueFind {
 						Database.valueKeyMap.put(value, key);
 					}
 		}
+	}
+	
+	public final static Unit getDefOfValInPath(SimpleLocalDefs methodDefs, UnitPath currPath, Unit currUnit,Value val) {
+		Unit defUnit = null;
+		if(val instanceof Local) {
+			Local local = (Local) val;
+			for(Unit localDef : methodDefs.getDefsOfAt(local, currUnit))
+				if(currPath.path.contains(localDef))
+					defUnit = localDef;
+		}
+		return defUnit;
 	}
 }
