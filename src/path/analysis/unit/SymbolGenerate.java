@@ -2,7 +2,6 @@ package path.analysis.unit;
 
 import java.util.Set;
 
-import edu.uci.seal.Utils;
 import global.Database;
 import global.Init;
 import soot.SootMethod;
@@ -208,7 +207,7 @@ public class SymbolGenerate {
 		return returnExpr;
 	}
 	
-	private boolean isObjectEquals(String opExpr1, String opExpr2) {
+	private static boolean isObjectEquals(String opExpr1, String opExpr2) {
 		if (opExpr1.contains("_java.lang.String_") && !opExpr2.contains("_java.lang.String_") && !opExpr2.contains("\""))
 			return true;
 		else if (!opExpr1.contains("_java.lang.String_") && opExpr2.contains("_java.lang.String_") && !opExpr2.contains("\""))

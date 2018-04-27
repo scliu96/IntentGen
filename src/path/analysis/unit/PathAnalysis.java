@@ -71,18 +71,17 @@ public class PathAnalysis {
 			analyzeUnitPathInMethod(methodPoint);
 		}
 		
-		/*
-		List<Path> intraPaths = new ArrayList<Path>();
-		for(Path currPath : finalPaths) {
-			analyzeProgramPath(method,currPath);
+		for(SootMethod m : Database.entryPoints) {
+			MethodPoint mp = Database.methodPointsMap.get(m);
+			for()
 		}
-		*/
 	}
 	
 	private static void analyzeUnitPathInMethod(MethodPoint methodPoint) {
+		System.out.println(methodPoint.entryMethod);
 		SootMethod method = methodPoint.entryMethod;
 		Set<UnitPath> unitPaths = methodPoint.unitPaths;
-		for(UnitPath currPath : unitPaths)
+		for(UnitPath currPath : unitPaths) {
 			for(int i = 0; i<currPath.path.size(); i++) {
 				Unit currUnitInPath = currPath.path.get(i);
 				if(!unitNeedsAnalysis(currUnitInPath))
@@ -108,6 +107,9 @@ public class PathAnalysis {
 	                e.printStackTrace();
 	            }
 			}
+			currPath.print();
+			System.out.println("");
+		}
 	}
 	
 	private static boolean unitNeedsAnalysis(Unit unit) {

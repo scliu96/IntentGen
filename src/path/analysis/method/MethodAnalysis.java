@@ -26,8 +26,8 @@ public class MethodAnalysis {
 			//System.out.println(currPoint.entryMethod);
 			
 			boolean breakFlag = false;
-			for(MethodPoint mp : Database.methodPointsMap.values())
-				if(mp.entryMethod.equals(currPoint.entryMethod)) {
+			for(SootMethod method : Database.methodPointsMap.keySet())
+				if(method.equals(currPoint.entryMethod)) {
 					breakFlag = true;
 					break;
 				}
@@ -35,6 +35,8 @@ public class MethodAnalysis {
 				continue;
 			
 			Iterator<Edge> outEdges = Database.apkCG.edgesOutOf(currPoint.entryMethod);
+			
+			//System.out.println(outEdges.hasNext());
 			if(outEdges != null)
 				while(outEdges.hasNext()) {
 					Edge e = outEdges.next();
@@ -49,6 +51,7 @@ public class MethodAnalysis {
 	}
 	
 	private static boolean methodNeedsAnalysis(SootMethod method) {
+		//System.out.println(method.toString());
 		if(method.isJavaLibraryMethod())
 			return false;
 		if(method.getDeclaringClass().getPackageName().startsWith("android."))

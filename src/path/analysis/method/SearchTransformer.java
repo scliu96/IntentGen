@@ -29,8 +29,6 @@ public class SearchTransformer extends BodyTransformer{
 					return true;
 				else if(m.getName().equals("onUnbind"))
 					return true;
-				if(m.getName().equals("onBind"))
-					return true;
 			}
 		return false;
 	}

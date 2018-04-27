@@ -57,4 +57,26 @@ public class UnitPath {
 		return temp;
 	}
 	
+	public String toDeclString() {
+		String temp = "";
+		for(String s : decls)
+			temp = temp.concat(s).concat("\n");
+		return temp;
+	}
+	
+	public String toCondString() {
+		String temp = "";
+		for(String s : conds)
+			temp = temp.concat(s).concat("\n");
+		return temp;
+	}
+	
+	public void print() {
+		System.out.println("UnitPath:");
+		System.out.println(toUnitString());
+		System.out.println("Decls:");
+		System.out.println(toDeclString());
+		System.out.println("Conds:");
+		System.out.println(toCondString());
+	}
 }
