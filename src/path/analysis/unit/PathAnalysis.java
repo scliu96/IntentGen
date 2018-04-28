@@ -1,5 +1,10 @@
 package path.analysis.unit;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
@@ -73,6 +78,10 @@ public class PathAnalysis {
 		
 		for(SootMethod m : Database.entryPoints) {
 			MethodPoint mp = Database.methodPointsMap.get(m);
+			Set<UnitPath> workPaths = new LinkedHashSet<UnitPath>();
+			for(UnitPath path : mp.unitPaths) {
+				workPaths.add(path);
+			}
 			for(UnitPath path : mp.unitPaths) {
 				UnitPath finalPath = new UnitPath(path);
 				int size = path.path.size();
@@ -80,21 +89,39 @@ public class PathAnalysis {
 				for(int i=0;i<size+connectSize;i++) {
 					Unit callUnit = path.path.get(i);
 					if(mp.nextMethods.containsKey(callUnit))
-						connectSize = connectPath(finalPath,callUnit,mp.nextMethods.get(callUnit));
+						 = connectPath(finalPath,callUnit,mp.nextMethods.get(callUnit));
 				}
 			}
 		}
 	}
 	
-	private static int connectPath(UnitPath finalPath, Unit callUnit, SootMethod targetMethod) {
-		int index = -1;
+	private static Set<UnitPath> connectPath(UnitPath finalPath, Unit callUnit, SootMethod targetMethod) {
+		
+		/*int index = -1;
 		for(Unit unit : finalPath.path)
 			if(unit.equals(callUnit))
 				index = finalPath.path.indexOf(unit);
-		
+		*/
+		//Set<UnitPath> tempPaths = new LinkedHashSet<UnitPath>();
 		MethodPoint mp = Database.methodPointsMap.get(targetMethod);
 		for(UnitPath path : mp.unitPaths) {
-			finalPath.path.addAll(index, path.path);
+			Map<Unit,Unit> callUnits = new LinkedHashMap<Unit,Unit>();
+			for(Unit unit : path.path)
+				if(mp.nextMethods.containsKey(unit))
+					callUnits.put(unit, path.path.get(path.path.indexOf(unit)));
+			List<UnitPath> workPaths = new LinkedList<UnitPath>();
+			workPaths.add(path);
+			for(Unit unit : callUnits.keySet()) {
+				while(!workPaths.isEmpty()) {
+					UnitPath nowPath = workPaths.get(0);
+					workPaths.remove(nowPath);
+					if(nowPath.path.contains(unit))
+						if(!nowPath.path.get(nowPath.path.indexOf(unit)).equals(callUnits.get(unit))) {
+							connectPath(nowPath,unit,mp.nextMethods.get(unit));
+							workPaths.addAll();
+						}
+				}
+			}
 		}
 			
 	}
