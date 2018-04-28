@@ -63,10 +63,7 @@ public class Init{
         PackManager.v().runPacks();
         
         Database.apkCG = Scene.v().getCallGraph();
-        //debug about unit call graph in many ways
         MethodAnalysis.analysis();
-        //for(MethodPoint mp : methodPoints)
-        //		System.out.println(mp.toMethodString());
         PathAnalysis.analysis();
         return;
 	}

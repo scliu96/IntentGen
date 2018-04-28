@@ -73,8 +73,30 @@ public class PathAnalysis {
 		
 		for(SootMethod m : Database.entryPoints) {
 			MethodPoint mp = Database.methodPointsMap.get(m);
-			for()
+			for(UnitPath path : mp.unitPaths) {
+				UnitPath finalPath = new UnitPath(path);
+				int size = path.path.size();
+				int connectSize = 0;
+				for(int i=0;i<size+connectSize;i++) {
+					Unit callUnit = path.path.get(i);
+					if(mp.nextMethods.containsKey(callUnit))
+						connectSize = connectPath(finalPath,callUnit,mp.nextMethods.get(callUnit));
+				}
+			}
 		}
+	}
+	
+	private static int connectPath(UnitPath finalPath, Unit callUnit, SootMethod targetMethod) {
+		int index = -1;
+		for(Unit unit : finalPath.path)
+			if(unit.equals(callUnit))
+				index = finalPath.path.indexOf(unit);
+		
+		MethodPoint mp = Database.methodPointsMap.get(targetMethod);
+		for(UnitPath path : mp.unitPaths) {
+			finalPath.path.addAll(index, path.path);
+		}
+			
 	}
 	
 	private static void analyzeUnitPathInMethod(MethodPoint methodPoint) {
@@ -107,7 +129,8 @@ public class PathAnalysis {
 	                e.printStackTrace();
 	            }
 			}
-			currPath.print();
+			System.out.print(currPath.toUnitString());
+			//currPath.print();
 			System.out.println("");
 		}
 	}

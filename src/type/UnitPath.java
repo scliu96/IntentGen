@@ -25,11 +25,15 @@ public class UnitPath {
 		conds.addAll(currConds);
 	}
 	
-	public UnitPath(UnitPath up, Unit nextUnit) {
+	public UnitPath(UnitPath up) {
 		path.addAll(up.path);
-		path.add(nextUnit);
 		decls.addAll(up.decls);
 		conds.addAll(up.conds);
+	}
+	
+	public UnitPath(UnitPath up, Unit nextUnit) {
+		this(up);
+		path.add(nextUnit);
 	}
 	
 	public UnitPath copy(UnitPath up) {
@@ -79,4 +83,5 @@ public class UnitPath {
 		System.out.println("Conds:");
 		System.out.println(toCondString());
 	}
+	
 }
