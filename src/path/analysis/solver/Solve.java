@@ -112,7 +112,7 @@ public class Solve {
 		}
 		
 		Intent newIntent = new Intent(method.getDeclaringClass().getName(),action,categories,extrasData);
-		
+		return new Pair<Intent,Boolean>(newIntent,isPathFeasible);
 	}
 	
 	private static Pair<Map<String,String>,Boolean> returnSatisfyingModelForZ3(UnitPath currPath) {
