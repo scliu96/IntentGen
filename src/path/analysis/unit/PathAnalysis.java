@@ -76,17 +76,16 @@ public class PathAnalysis {
 			analyzeUnitPathInMethod(methodPoint);
 			System.out.println("sss");
 		}
-		/*
 		for(MethodPoint m : Database.methodPointsMap.values()) {
 			System.out.println("zzz");
 			System.out.println(m.entryMethod.getName());
 			System.out.println("kkk");
 			System.out.println(m.unitPaths.size());
 			System.out.println(m.nextMethods.size());
-		}*/
+		}
 		
 		for(SootMethod m : Database.entryPoints) {
-			Set<UnitPath> ups = findFinalPaths(m);
+			Set<UnitPath> ups = null;//findFinalPaths(m);
 			System.out.println(m.getName() + ":" + ups.size());
 			Database.methodPathsMap.put(m, ups);
 			Database.finalPaths.addAll(ups);
