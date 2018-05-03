@@ -27,9 +27,6 @@ public class Database {
 	// key: method, value: methodpaths
 	public static Map<SootMethod,Set<UnitPath>> methodPathsMap = new LinkedHashMap<SootMethod,Set<UnitPath>>();
 	
-	//set of final paths
-	public static Set<UnitPath> finalPaths = new LinkedHashSet<UnitPath>();
-	
 	// key: path of inter-method units, value: intent corresponding to the path
 	public static Map<UnitPath,Intent> finalPathsMap = new LinkedHashMap<UnitPath,Intent>();
 	

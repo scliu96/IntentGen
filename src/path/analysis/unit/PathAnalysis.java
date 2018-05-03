@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import global.Init;
+import path.analysis.solver.Solve;
 import global.Database;
 import soot.Body;
 import soot.PatchingChain;
@@ -42,7 +43,7 @@ public class PathAnalysis {
 			Stack<UnitPath> workPaths = new Stack<UnitPath>();
 			UnitPath newUp = new UnitPath(startingUnit);
 			workPaths.push(newUp);
-			
+			//System.out.println(methodPoint.entryMethod.getName());
 			//boolean hitPathsLimit = false;
 			Set<UnitPath> finalPaths = new LinkedHashSet<UnitPath>();
 			while(!workUnits.isEmpty()) {
@@ -51,6 +52,7 @@ public class PathAnalysis {
 				
 				Unit currUnit = workUnits.pop();
 				UnitPath currPath = workPaths.pop();
+				//System.out.println(currUnit.toString()+","+ug.getSuccsOf(currUnit).size());
 				if(ug.getSuccsOf(currUnit).isEmpty()) {
 					Init.logger.trace("A final path :" + currPath.toUnitString());
 					//System.out.println(currPath.toUnitString());
@@ -62,6 +64,10 @@ public class PathAnalysis {
 				for(Unit succUnit : ug.getSuccsOf(currUnit)) {
 					if(currPath.path.contains(succUnit)){
 						Init.logger.trace("Loop detected while analyze method : "+ method.getName());
+						if(currPath.path.indexOf(succUnit) == currPath.path.size()-1)
+							continue;
+						workUnits.push(succUnit);
+						workPaths.push(currPath);
 						continue;
 					}
 					Init.logger.trace("Fork the following path on unit " + succUnit);
@@ -74,79 +80,21 @@ public class PathAnalysis {
 			methodPoint.unitPaths = finalPaths;
 			// find all path in one method
 			analyzeUnitPathInMethod(methodPoint);
-			System.out.println("sss");
-		}
-		for(MethodPoint m : Database.methodPointsMap.values()) {
-			System.out.println("zzz");
-			System.out.println(m.entryMethod.getName());
-			System.out.println("kkk");
-			System.out.println(m.unitPaths.size());
-			System.out.println(m.nextMethods.size());
 		}
 		
 		for(SootMethod m : Database.entryPoints) {
-			Set<UnitPath> ups = null;//findFinalPaths(m);
-			System.out.println(m.getName() + ":" + ups.size());
+			Set<UnitPath> ups = findFinalPaths(m);
 			Database.methodPathsMap.put(m, ups);
-			Database.finalPaths.addAll(ups);
 		}
-		System.out.println(Database.finalPaths.size());
-	}
-	
-	private static Set<UnitPath> findFinalPaths(SootMethod targetMethod) {
-		System.out.println(targetMethod.getName());
-		MethodPoint mp = Database.methodPointsMap.get(targetMethod);
-		Set<UnitPath> finalPaths = new LinkedHashSet<UnitPath>();
-		for(UnitPath path : mp.unitPaths) {
-			Map<Unit,Unit> callUnits = new LinkedHashMap<Unit,Unit>();
-			for(Unit unit : path.path)
-				if(mp.nextMethods.containsKey(unit))
-					callUnits.put(unit, path.path.get(path.path.indexOf(unit)));
-			List<UnitPath> workPaths = new LinkedList<UnitPath>();
-			workPaths.add(path);
-			while(!workPaths.isEmpty()) {
-				UnitPath nowPath = workPaths.get(0);
-				System.out.println(nowPath.toUnitString());
-				workPaths.remove(nowPath);
-				int callUnitNum = 0;
-				for(Unit callUnit : callUnits.keySet())
-					if(nowPath.path.contains(callUnit))
-						if(nowPath.path.get(nowPath.path.indexOf(callUnit)).equals(callUnits.get(callUnit))) {
-							callUnitNum++;
-							Set<UnitPath> conPaths = null;
-							if(Database.methodPathsMap.containsKey(mp.nextMethods.get(callUnit)))
-								conPaths = Database.methodPathsMap.get(mp.nextMethods.get(callUnit));
-							else{
-								conPaths = findFinalPaths(mp.nextMethods.get(callUnit));
-								Database.methodPathsMap.put(mp.nextMethods.get(callUnit), conPaths);
-							}
-							for(UnitPath conPath : conPaths)
-								workPaths.add(connectPath(path,conPath,callUnit));
-						}
-				if(callUnitNum == 0) {
-					System.out.println(nowPath.toUnitString());
-					finalPaths.add(nowPath);
-				}
-			}
-		}
-		return finalPaths;
-	}
-	
-	private static UnitPath connectPath(UnitPath callPath, UnitPath calledPath, Unit callUnit) {
-		UnitPath newPath = new UnitPath(callPath);
-		if(newPath.path.contains(callUnit)) {
-			int index = newPath.path.indexOf(callUnit);
-			newPath.path.addAll(index+1, calledPath.path);
-		}
-		else newPath.path.addAll(calledPath.path);
 		
-		newPath.conds.addAll(calledPath.conds);
-		newPath.decls.addAll(calledPath.decls);
-		return newPath;
+		for(SootMethod m : Database.entryPoints)
+			for(UnitPath currPath : Database.methodPathsMap.get(m))
+				Solve.runSolvingPhase(m, currPath);
+		
 	}
 	
 	private static void analyzeUnitPathInMethod(MethodPoint methodPoint) {
-		System.out.println(methodPoint.entryMethod);
+		//System.out.println(methodPoint.entryMethod);
 		SootMethod method = methodPoint.entryMethod;
 		Set<UnitPath> unitPaths = methodPoint.unitPaths;
 		for(UnitPath currPath : unitPaths) {
@@ -175,9 +123,6 @@ public class PathAnalysis {
 	                e.printStackTrace();
 	            }
 			}
-			//System.out.print(currPath.toUnitString());
-			//currPath.print();
-			System.out.println("");
 		}
 	}
 	
@@ -188,5 +133,66 @@ public class PathAnalysis {
 				return false;
 		}
 		return true;
+	}
+	
+	private static Set<UnitPath> findFinalPaths(SootMethod targetMethod) {
+		MethodPoint mp = Database.methodPointsMap.get(targetMethod);
+		Set<UnitPath> finalPaths = new LinkedHashSet<UnitPath>();
+		for(UnitPath path : mp.unitPaths) {
+			//System.out.println(path.toUnitString());
+			Map<Unit,Unit> callUnits = new LinkedHashMap<Unit,Unit>();
+			for(Unit unit : path.path)
+				if(mp.nextMethods.containsKey(unit))
+					callUnits.put(unit, path.path.get(path.path.indexOf(unit)+1));
+			List<UnitPath> workPaths = new LinkedList<UnitPath>();
+			List<UnitPath> analyzedPaths = new LinkedList<UnitPath>();
+			workPaths.add(path);
+			while(!workPaths.isEmpty()) {
+				UnitPath nowPath = workPaths.get(0);
+				//System.out.println(nowPath.toUnitString());
+				workPaths.remove(nowPath);
+				analyzedPaths.add(nowPath);
+				int callUnitNum = 0;
+				for(Unit callUnit : callUnits.keySet()) {
+					if(nowPath.path.contains(callUnit)) {
+						if(nowPath.path.get(nowPath.path.indexOf(callUnit)+1).equals(callUnits.get(callUnit))) {
+							callUnitNum++;
+							Set<UnitPath> conPaths = null;
+							if(Database.methodPathsMap.containsKey(mp.nextMethods.get(callUnit)))
+								conPaths = Database.methodPathsMap.get(mp.nextMethods.get(callUnit));
+							else if(Database.methodPointsMap.containsKey(mp.nextMethods.get(callUnit))){
+								conPaths = findFinalPaths(mp.nextMethods.get(callUnit));
+								Database.methodPathsMap.put(mp.nextMethods.get(callUnit), conPaths);
+							}
+							else break;;
+							for(UnitPath conPath : conPaths) {
+								UnitPath newPath = connectPath(nowPath,conPath,callUnit);
+								if(!analyzedPaths.contains(newPath))
+									workPaths.add(newPath);
+							}
+							break;
+						}
+					}
+				}
+				if(callUnitNum == 0) {
+					//System.out.println(nowPath.toUnitString());
+					finalPaths.add(nowPath);
+				}
+			}
+		}
+		return finalPaths;
+	}
+	
+	private static UnitPath connectPath(UnitPath callPath, UnitPath calledPath, Unit callUnit) {
+		UnitPath newPath = new UnitPath(callPath);
+		if(newPath.path.contains(callUnit)) {
+			int index = newPath.path.indexOf(callUnit);
+			newPath.path.addAll(index+1, calledPath.path);
+		}
+		else newPath.path.addAll(calledPath.path);
+		
+		newPath.conds.addAll(calledPath.conds);
+		newPath.decls.addAll(calledPath.decls);
+		return newPath;
 	}
 }
