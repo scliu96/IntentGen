@@ -1,12 +1,16 @@
 package path.analysis.solver;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,23 +29,24 @@ import type.Intent;
 import type.UnitPath;
 
 public class Solve {
-	private final static String Z3_RUNTIME_SPECS_DIR = "z3_runtime_specs";
+	private final static String Z3_RUNTIME_SPECS_DIR = "/Users/apple/Documents/Eclipse/ServiceLeak/z3_runtime_specs";
 	
-	protected static boolean runSolvingPhase(SootMethod method, String currClassName, Unit startingUnit, UnitPath currPath) {
+	public static boolean runSolvingPhase(SootMethod method, UnitPath currPath) {
 		Init.logger.trace("Current z3 specification to solve: ");
 		for(String decl : currPath.decls)
 			Init.logger.trace(decl);
 		for(String expr : currPath.conds)
 			Init.logger.trace(expr);
 		
-		Pair<Intent,Boolean> results = findSolutionForPath(method,currPath,startingUnit);
+		Pair<Intent,Boolean> results = findSolutionForPath(method,currPath);
 		boolean feasible = results.getValue1();
 		Intent genIntent = results.getValue0();
+		if(feasible)
+			Database.finalPathsMap.put(currPath, genIntent);
 		return feasible;
 	}
 	
-	private static Pair<Intent,Boolean> findSolutionForPath(SootMethod method, UnitPath currPath, Unit startingUnit) {
-		String targetComponent = null;
+	private static Pair<Intent,Boolean> findSolutionForPath(SootMethod method, UnitPath currPath) {
 		String action = null;
 		Set<String> categories = new LinkedHashSet<String>();
 		Set<Triplet<String,String,String>> extrasData = new LinkedHashSet<Triplet<String,String,String>>();
@@ -116,6 +121,7 @@ public class Solve {
 	}
 	
 	private static Pair<Map<String,String>,Boolean> returnSatisfyingModelForZ3(UnitPath currPath) {
+		//return new Pair<Map<String,String>,Boolean>(new LinkedHashMap<String,String>(),true);
 		String pathCondFileName = null;
 		try {
 			pathCondFileName = Z3_RUNTIME_SPECS_DIR + File.separator + Thread.currentThread().getId() + "_z3_path_cond";
@@ -150,6 +156,7 @@ public class Solve {
 				outSpec += d+"\n";
 			for (String c : currPath.conds)
 				outSpec += c+"\n";
+			//System.out.println(outSpec);
 			outSpec += "(check-sat-using (then qe smt))\n";
 			outSpec += "(get-model)\n";
 			Init.logger.trace("z3 specification sent to solver:");
@@ -159,25 +166,13 @@ public class Solve {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		
-		String solverLoc = System.getenv("Z3_EXEC");
-		ProcessBuilder pb = new ProcessBuilder(solverLoc,pathCondFileName);
+		String[] Cmd = {"/Users/apple/Documents/z3-master/z3 " + pathCondFileName};
 		Init.logger.trace("Running z3 solver");
-		Process p = null;
 		String returnedOutput = null;
 		try {
-			p = pb.start();
-			int errCode = p.waitFor();
-			Init.logger.trace("Returned error code from solver: " + errCode);
-			Init.logger.trace("Returned input stream as string:");
-			returnedOutput = convertStreamToString(p.getInputStream());
-			Init.logger.trace(returnedOutput);
-			Init.logger.trace("Returned error stream as string:");
-			String errorOut = convertStreamToString(p.getErrorStream());
-			Init.logger.trace(errorOut);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
+			returnedOutput = runProcess(Cmd);
+		}
+		catch(Exception e) {
 			e.printStackTrace();
 		}
 
@@ -199,8 +194,19 @@ public class Solve {
 		return new Pair<Map<String,String>,Boolean>(model,isSat);
 	}
 	
+	private static String runProcess(String[] command) throws Exception {
+        Process pro = Runtime.getRuntime().exec(command);
+        Init.logger.trace("Returned error stream as string:");
+		String errorOut = convertStreamToString(pro.getErrorStream());
+		Init.logger.trace(errorOut);
+		
+        pro.waitFor();
+        System.out.println(command + " exitValue() " + pro.exitValue());
+        return convertStreamToString(pro.getInputStream());
+    }
+	
 	private static String convertStreamToString(java.io.InputStream is) {
-		java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+		Scanner s = new Scanner(is).useDelimiter("\\A");
 		return s.hasNext() ? s.next() : "";
 	}
 }
