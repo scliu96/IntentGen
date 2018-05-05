@@ -22,14 +22,20 @@ import com.microsoft.z3.*;
 
 import global.Database;
 import global.Init;
+import path.analysis.method.MethodAnalysis;
+import path.analysis.method.SearchTransformer;
+import path.analysis.unit.PathAnalysis;
 import soot.Local;
+import soot.PackManager;
+import soot.Scene;
 import soot.SootMethod;
+import soot.Transform;
 import soot.Unit;
 import type.Intent;
 import type.UnitPath;
 
 public class Solve {
-	private final static String Z3_RUNTIME_SPECS_DIR = "/Users/apple/Documents/Eclipse/ServiceLeak/z3_runtime_specs";
+	private final static String Z3_RUNTIME_SPECS_DIR = "z3_runtime_specs";
 	
 	public static boolean runSolvingPhase(SootMethod method, UnitPath currPath) {
 		Init.logger.trace("Current z3 specification to solve: ");
@@ -166,7 +172,8 @@ public class Solve {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		String[] Cmd = {"/Users/apple/Documents/z3-master/z3 " + pathCondFileName};
+		//String solverLoc = System.getenv("z3");
+		String[] Cmd = {"/bin/z3","-h"}; //+ pathCondFileName;
 		Init.logger.trace("Running z3 solver");
 		String returnedOutput = null;
 		try {
@@ -201,12 +208,25 @@ public class Solve {
 		Init.logger.trace(errorOut);
 		
         pro.waitFor();
-        System.out.println(command + " exitValue() " + pro.exitValue());
+        //System.out.println(command + " exitValue() " + pro.exitValue());
         return convertStreamToString(pro.getInputStream());
     }
 	
 	private static String convertStreamToString(java.io.InputStream is) {
 		Scanner s = new Scanner(is).useDelimiter("\\A");
 		return s.hasNext() ? s.next() : "";
+	}
+	
+	public static void main(String[] args){
+		String[] Cmd = {"/bin/z3","-h"};
+		String returnedOutput = null;
+		try {
+			returnedOutput = runProcess(Cmd);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+        return;
 	}
 }
