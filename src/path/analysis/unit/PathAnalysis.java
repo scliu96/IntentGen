@@ -164,7 +164,7 @@ public class PathAnalysis {
 								conPaths = findFinalPaths(mp.nextMethods.get(callUnit));
 								Database.methodPathsMap.put(mp.nextMethods.get(callUnit), conPaths);
 							}
-							else break;;
+							else break;
 							for(UnitPath conPath : conPaths) {
 								UnitPath newPath = connectPath(nowPath,conPath,callUnit);
 								if(!analyzedPaths.contains(newPath))
