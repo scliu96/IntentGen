@@ -68,18 +68,21 @@ public class Init{
 	}
 	
 	public static void main(String[] args) throws Exception {
+		System.out.println("Init");
+		printSystemTime();
 		sootInit();
 		pathInit();
-		
+		System.out.println("Begin");
+		printSystemTime();
 		SearchTransformer mySearch = new SearchTransformer();
         PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter",mySearch));
         PackManager.v().runPacks();
         
         Database.apkCG = Scene.v().getCallGraph();
+        MethodAnalysis.analysis();
         System.out.println("Find " + Database.entryPoints.size() + " entryMethods");
         printSystemTime();
         
-        MethodAnalysis.analysis();
         PathAnalysis.analysis();
         return;
 	}
