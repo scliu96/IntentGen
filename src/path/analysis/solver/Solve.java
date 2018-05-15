@@ -130,7 +130,7 @@ public class Solve {
 		//return new Pair<Map<String,String>,Boolean>(new LinkedHashMap<String,String>(),true);
 		String pathCondFileName = null;
 		try {
-			pathCondFileName = Z3_RUNTIME_SPECS_DIR + File.separator + Thread.currentThread().getId() + "_z3_path_cond";
+			pathCondFileName = Z3_RUNTIME_SPECS_DIR + File.separator + "z3_path_cond";
 			PrintWriter out = new PrintWriter(pathCondFileName);
 			String outSpec = "";
 			outSpec +=	"(declare-datatypes () ((Object Null NotNull)))\n" +
@@ -172,8 +172,7 @@ public class Solve {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		//String solverLoc = System.getenv("z3");
-		String[] Cmd = {"/bin/z3","-h"}; //+ pathCondFileName;
+		String[] Cmd = {Init.Z3BuildPath+"/z3",pathCondFileName};
 		Init.logger.trace("Running z3 solver");
 		String returnedOutput = null;
 		try {
@@ -215,18 +214,5 @@ public class Solve {
 	private static String convertStreamToString(java.io.InputStream is) {
 		Scanner s = new Scanner(is).useDelimiter("\\A");
 		return s.hasNext() ? s.next() : "";
-	}
-	
-	public static void main(String[] args){
-		String[] Cmd = {"/bin/z3","-h"};
-		String returnedOutput = null;
-		try {
-			returnedOutput = runProcess(Cmd);
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
-		
-        return;
 	}
 }

@@ -1,4 +1,5 @@
 package global;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -24,7 +25,8 @@ import type.UnitPath;
 
 public class Init{
 	private final static String androidJarPath="/Users/apple/Documents/Eclipse/android-platforms-master";
-	private final static String APKPath="/Users/apple/Documents/AndroidStudio/release/app-release.apk";
+	private final static String APKPath="/Users/apple/Documents/AndroidStudio/release/Zhihu_v5.16.2_apkpure.com.apk";
+	public final static String Z3BuildPath = "/Users/apple/Documents/z3-master/build";
 	
 	public final static boolean parallelEnabled = false;
 	public final static boolean pathLimitEnables = true;
@@ -34,8 +36,6 @@ public class Init{
 	
 	private static void sootInit(){
 		soot.G.reset();
-		//G.v().out.close();
-		//;new PrintStream(new File("/Users/apple/Documents/Eclipse/ServiceLeak/log/SootPrint"));
 		Options.v().set_src_prec(Options.src_prec_apk);
 		Options.v().set_android_jars(androidJarPath);
 		Options.v().set_process_dir(Collections.singletonList(APKPath));
@@ -54,6 +54,19 @@ public class Init{
 		else finalPathsLimit = Integer.MAX_VALUE;
 	}
 	
+	public static void printSystemTime() {
+		int y,m,d,h,mi,s,ms;      
+	    Calendar cal=Calendar.getInstance();      
+	    y = cal.get(Calendar.YEAR);      
+	    m = cal.get(Calendar.MONTH);      
+	    d = cal.get(Calendar.DATE);      
+	    h = cal.get(Calendar.HOUR_OF_DAY);      
+	    mi = cal.get(Calendar.MINUTE);      
+	    s = cal.get(Calendar.SECOND);
+	    ms = cal.get(Calendar.MILLISECOND);
+	    System.out.println( h + ":" + mi + ":" + s + ":" + ms);      
+	}
+	
 	public static void main(String[] args) throws Exception {
 		sootInit();
 		pathInit();
@@ -63,6 +76,9 @@ public class Init{
         PackManager.v().runPacks();
         
         Database.apkCG = Scene.v().getCallGraph();
+        System.out.println("Find " + Database.entryPoints.size() + " entryMethods");
+        printSystemTime();
+        
         MethodAnalysis.analysis();
         PathAnalysis.analysis();
         return;
