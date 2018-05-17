@@ -172,7 +172,7 @@ public class Solve {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		String[] Cmd = {Init.Z3BuildPath+"/z3",pathCondFileName};
+		String[] Cmd = {Init.Z3BuildPath + File.separator + "z3" , pathCondFileName};
 		Init.logger.trace("Running z3 solver");
 		String returnedOutput = null;
 		try {

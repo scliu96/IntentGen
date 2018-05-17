@@ -81,6 +81,7 @@ public class Init{
         Database.apkCG = Scene.v().getCallGraph();
         MethodAnalysis.analysis();
         System.out.println("Find " + Database.entryPoints.size() + " entryMethods");
+        System.out.println("Find " + Database.methodPointsMap.size() + " methods");
         printSystemTime();
         
         PathAnalysis.analysis();

@@ -31,7 +31,7 @@ public class PathAnalysis {
 	public static void analysis() throws Exception {
 		for(MethodPoint methodPoint : Database.methodPointsMap.values()) {
 			SootMethod method = methodPoint.entryMethod;
-			//System.out.println();
+			//System.out.println(method.getActiveBody().toString());
 			Body b = method.getActiveBody();
 			PatchingChain<Unit> units = b.getUnits();
 			BriefUnitGraph ug = new BriefUnitGraph(b);
