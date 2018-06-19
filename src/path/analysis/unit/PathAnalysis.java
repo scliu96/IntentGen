@@ -31,7 +31,6 @@ public class PathAnalysis {
 	public static void analysis() throws Exception {
 		for(MethodPoint methodPoint : Database.methodPointsMap.values()) {
 			SootMethod method = methodPoint.entryMethod;
-			//System.out.println(method.getActiveBody().toString());
 			Body b = method.getActiveBody();
 			PatchingChain<Unit> units = b.getUnits();
 			BriefUnitGraph ug = new BriefUnitGraph(b);
@@ -44,8 +43,6 @@ public class PathAnalysis {
 			Stack<UnitPath> workPaths = new Stack<UnitPath>();
 			UnitPath newUp = new UnitPath(startingUnit);
 			workPaths.push(newUp);
-			//System.out.println(methodPoint.entryMethod.getName());
-			//boolean hitPathsLimit = false;
 			Set<UnitPath> finalPaths = new LinkedHashSet<UnitPath>();
 			while(!workUnits.isEmpty()) {
 				if(workPaths.size() != workUnits.size())
@@ -53,13 +50,10 @@ public class PathAnalysis {
 				
 				Unit currUnit = workUnits.pop();
 				UnitPath currPath = workPaths.pop();
-				//System.out.println(currUnit.toString()+","+ug.getSuccsOf(currUnit).size());
 				if(ug.getSuccsOf(currUnit).isEmpty()) {
 					Init.logger.trace("A final path :" + currPath.toUnitString());
-					//System.out.println(currPath.toUnitString());
 					if(finalPaths.size() < Init.finalPathsLimit)
 						finalPaths.add(currPath);
-					//else hitPathsLimit = true;
 				}
 				
 				for(Unit succUnit : ug.getSuccsOf(currUnit)) {
@@ -79,15 +73,15 @@ public class PathAnalysis {
 				}
 			}
 			methodPoint.unitPaths = finalPaths;
-			// find all path in one method
 			analyzeUnitPathInMethod(methodPoint);
 		}
 		
 		int totalInnerMethodPath = 0;
         for(MethodPoint mp :Database.methodPointsMap.values())
         		totalInnerMethodPath += mp.unitPaths.size();
-        System.out.println("Analyze " + Database.methodPointsMap.size() + " methods");
-        System.out.println("Find " + totalInnerMethodPath/Database.methodPointsMap.size() + " inner-method paths in average in one method");
+        Init.tempOut += "Analyze " + Database.methodPointsMap.size() + " methods\n";
+        Init.tempOut += "Find " + totalInnerMethodPath +" inner-method paths\n";
+        Init.tempOut += "Find " + (float)totalInnerMethodPath/(float)Database.methodPointsMap.size() + " inner-method paths in average in one method\n";
         Init.printSystemTime();
         
 		int totalInterMethodPath = 0;
@@ -96,18 +90,17 @@ public class PathAnalysis {
 			totalInterMethodPath += ups.size();
 			Database.methodPathsMap.put(m, ups);
 		}
-		System.out.println("Find " + totalInterMethodPath + " inter-method paths");
+		Init.tempOut += "Find " + totalInterMethodPath + " inter-method paths\n";
 		Init.printSystemTime();
 		
 		for(SootMethod m : Database.entryPoints)
 			for(UnitPath currPath : Database.methodPathsMap.get(m))
 				Solve.runSolvingPhase(m, currPath);
-		System.out.println("Find " + Database.finalPathsMap.size() + " feasible paths");
+		Init.tempOut += "Find " + Database.finalPathsMap.size() + " feasible paths\n";
 		Init.printSystemTime();
 	}
 	
 	private static void analyzeUnitPathInMethod(MethodPoint methodPoint) {
-		//System.out.println(methodPoint.entryMethod);
 		SootMethod method = methodPoint.entryMethod;
 		Set<UnitPath> unitPaths = methodPoint.unitPaths;
 		for(UnitPath currPath : unitPaths) {

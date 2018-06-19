@@ -23,8 +23,6 @@ public class MethodAnalysis {
 		
 		while(!workPoints.isEmpty()) {
 			MethodPoint currPoint = workPoints.pop();
-			//System.out.println(currPoint.entryMethod);
-			
 			boolean breakFlag = false;
 			for(SootMethod method : Database.methodPointsMap.keySet())
 				if(method.equals(currPoint.entryMethod)) {
@@ -35,8 +33,6 @@ public class MethodAnalysis {
 				continue;
 			
 			Iterator<Edge> outEdges = Database.apkCG.edgesOutOf(currPoint.entryMethod);
-			
-			//System.out.println(outEdges.hasNext());
 			if(outEdges != null)
 				while(outEdges.hasNext()) {
 					Edge e = outEdges.next();
@@ -52,6 +48,8 @@ public class MethodAnalysis {
 	
 	private static boolean methodNeedsAnalysis(SootMethod method) {
 		//System.out.println(method.toString());
+		if(Database.methodPointsMap.size() > 1000)
+			return false;
 		if(method.isJavaLibraryMethod())
 			return false;
 		if(method.getDeclaringClass().getPackageName().startsWith("android."))
