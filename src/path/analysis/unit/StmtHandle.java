@@ -12,9 +12,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.javatuples.Pair;
 
-import global.Database;
-import global.Init;
+import path.analysis.assist.Database;
+import path.analysis.main.Init;
 import path.analysis.solver.Solve;
+import path.analysis.type.UnitPath;
 import soot.BooleanType;
 import soot.ByteType;
 import soot.Local;
@@ -29,7 +30,6 @@ import soot.jimple.InvokeExpr;
 import soot.jimple.ParameterRef;
 import soot.jimple.StringConstant;
 import soot.toolkits.scalar.SimpleLocalDefs;
-import type.UnitPath;
 
 public class StmtHandle {
 	

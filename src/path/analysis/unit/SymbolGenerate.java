@@ -2,8 +2,9 @@ package path.analysis.unit;
 
 import java.util.Set;
 
-import global.Database;
-import global.Init;
+import path.analysis.assist.Database;
+import path.analysis.main.Init;
+import path.analysis.type.UnitPath;
 import soot.SootMethod;
 import soot.Type;
 import soot.Unit;
@@ -18,7 +19,6 @@ import soot.jimple.StringConstant;
 import soot.jimple.internal.JimpleLocal;
 import soot.tagkit.BytecodeOffsetTag;
 import soot.tagkit.Tag;
-import type.UnitPath;
 
 public class SymbolGenerate {
 	

@@ -1,7 +1,8 @@
 package path.analysis.method;
 import java.util.Map;
 
-import global.Database;
+import path.analysis.assist.Config;
+import path.analysis.assist.Database;
 import soot.Body;
 import soot.BodyTransformer;
 import soot.SootMethod;
@@ -17,19 +18,18 @@ public class SearchTransformer extends BodyTransformer{
 	private boolean methodIsNeed(SootMethod m){
 		if(m.getDeclaringClass().hasSuperclass())
 			if(m.getDeclaringClass().getSuperclass().toString().equals("android.app.Service")){
-				if(m.getDeclaringClass().getName().contains("android."))
+				if(isApkClassName(m.getDeclaringClass().getName()))
 					return false;
-				if(m.getName().equals("onCreate"))
-					return true;
-				else if(m.getName().equals("onStart"))
-					return true;
-				else if(m.getName().equals("onStartCommand"))
-					return true;
-				else if(m.getName().equals("onBind"))
-					return true;
-				else if(m.getName().equals("onUnbind"))
+				else if(Config.entryMethodsSet.contains(m.getName()))
 					return true;
 			}
+		return false;
+	}
+	
+	protected static boolean isApkClassName(String className) {
+		for(String apkStartString: Config.androidPkgPrefixesSet)
+			if(className.startsWith(apkStartString))
+				return true;
 		return false;
 	}
 }

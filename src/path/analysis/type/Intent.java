@@ -1,12 +1,7 @@
-package type;
-import java.util.LinkedHashMap;
+package path.analysis.type;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
-
 import org.javatuples.Triplet;
-
-import soot.Value;
 
 public class Intent {
 	public String targetComponent;

@@ -1,4 +1,4 @@
-package type;
+package path.analysis.type;
 
 import java.util.LinkedHashSet;
 import java.util.LinkedList;

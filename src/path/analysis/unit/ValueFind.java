@@ -7,10 +7,10 @@ import java.util.regex.Pattern;
 import org.javatuples.Pair;
 import org.javatuples.Quartet;
 
-import global.Globals;
-import global.Database;
-import global.Init;
-import type.UnitPath;
+import path.analysis.assist.Database;
+import path.analysis.config.Globals;
+import path.analysis.main.Init;
+import path.analysis.type.UnitPath;
 import soot.Body;
 import soot.BooleanType;
 import soot.ByteType;

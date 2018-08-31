@@ -20,10 +20,12 @@ import org.javatuples.Triplet;
 
 import com.microsoft.z3.*;
 
-import global.Database;
-import global.Init;
+import path.analysis.assist.Database;
+import path.analysis.main.Init;
 import path.analysis.method.MethodAnalysis;
 import path.analysis.method.SearchTransformer;
+import path.analysis.type.Intent;
+import path.analysis.type.UnitPath;
 import path.analysis.unit.PathAnalysis;
 import soot.Local;
 import soot.PackManager;
@@ -31,11 +33,9 @@ import soot.Scene;
 import soot.SootMethod;
 import soot.Transform;
 import soot.Unit;
-import type.Intent;
-import type.UnitPath;
 
 public class Solve {
-	private final static String Z3_RUNTIME_SPECS_DIR = "z3_runtime_specs";
+	
 	
 	public static boolean runSolvingPhase(SootMethod method, UnitPath currPath) {
 		Init.logger.trace("Current z3 specification to solve: ");
