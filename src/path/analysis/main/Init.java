@@ -3,8 +3,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
 import org.xmlpull.v1.XmlPullParserException;
 
 import path.analysis.assist.*;
@@ -19,7 +18,6 @@ import soot.jimple.infoflow.android.SetupApplication;
 import soot.options.Options;
 
 public class Init{
-	public static Logger logger = LogManager.getLogger(Init.class);
 	
 	private static void sootInit() throws IOException, XmlPullParserException{
 		SetupApplication app = new SetupApplication(Config.androidJarPath,Config.apkPath);
@@ -69,20 +67,20 @@ public class Init{
 		        PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter",mySearch));
 		        PackManager.v().runPacks();
 		        
-		        Timer.tempOut += "Find " + Database.entryPoints.size() + " entryMethods in ";
+		        Timer.tempOut += "Find " + Database.entryMethods.size() + " entryMethods in ";
 		        Timer.printSystemTime();
 		  
 		        Database.apkCG = Scene.v().getCallGraph();
-		        if(Database.apkCG == null || Database.entryPoints.isEmpty()) {
+		        if(Database.apkCG == null || Database.entryMethods.isEmpty()) {
 		        	tempOut.close();
 		        	continue;
 		        }
 		        
 		        MethodAnalysis.analysis();
-		        Timer.tempOut += "Find " + Database.methodPointsMap.size() + " methods\n";
+		        Timer.tempOut += "Find " + Database.analyzedMethods.size() + " methods need to be analyzed in ";
 		        Timer.printSystemTime();
 		        
-		        //PathAnalysis.analysis();
+		        PathAnalysis.analysis();
 		        
 		        tempOut.print(Timer.tempOut);
 				tempOut.close();

@@ -1,11 +1,8 @@
 package path.analysis.solver;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+
 import java.io.PrintWriter;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -14,41 +11,31 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.javatuples.Pair;
 import org.javatuples.Triplet;
-
 import com.microsoft.z3.*;
-
+import path.analysis.assist.Config;
 import path.analysis.assist.Database;
-import path.analysis.main.Init;
-import path.analysis.method.MethodAnalysis;
-import path.analysis.method.SearchTransformer;
 import path.analysis.type.Intent;
 import path.analysis.type.UnitPath;
-import path.analysis.unit.PathAnalysis;
 import soot.Local;
-import soot.PackManager;
-import soot.Scene;
 import soot.SootMethod;
-import soot.Transform;
-import soot.Unit;
 
 public class Solve {
 	
 	
 	public static boolean runSolvingPhase(SootMethod method, UnitPath currPath) {
-		Init.logger.trace("Current z3 specification to solve: ");
+		System.out.println("Current z3 specification to solve: ");
 		for(String decl : currPath.decls)
-			Init.logger.trace(decl);
+			System.out.println(decl);
 		for(String expr : currPath.conds)
-			Init.logger.trace(expr);
+			System.out.println(expr);
 		
 		Pair<Intent,Boolean> results = findSolutionForPath(method,currPath);
 		boolean feasible = results.getValue1();
 		Intent genIntent = results.getValue0();
 		if(feasible)
-			Database.finalPathsMap.put(currPath, genIntent);
+			Database.feasiblePathsMap.put(currPath, genIntent);
 		return feasible;
 	}
 	
@@ -63,11 +50,11 @@ public class Solve {
 			Map<String,String> model = returnSATModel.getValue0();
 			Boolean isSAT = returnSATModel.getValue1();
 			if(!isSAT) {
-				Init.logger.trace("path is infeasible");
+				System.out.println("path is infeasible");
 				isPathFeasible = false;
 			}
 			else {
-				Init.logger.trace("path is feasible");
+				System.out.println("path is feasible");
 				isPathFeasible = true;
 				
 				Map<String,String> intentSymbol_actionSymbol_map = new LinkedHashMap<String,String>();
@@ -130,7 +117,7 @@ public class Solve {
 		//return new Pair<Map<String,String>,Boolean>(new LinkedHashMap<String,String>(),true);
 		String pathCondFileName = null;
 		try {
-			pathCondFileName = Z3_RUNTIME_SPECS_DIR + File.separator + "z3_path_cond";
+			pathCondFileName = Config.Z3_RUNTIME_SPECS_DIR + File.separator + "z3_path_cond";
 			PrintWriter out = new PrintWriter(pathCondFileName);
 			String outSpec = "";
 			outSpec +=	"(declare-datatypes () ((Object Null NotNull)))\n" +
@@ -165,15 +152,15 @@ public class Solve {
 			//System.out.println(outSpec);
 			outSpec += "(check-sat-using (then qe smt))\n";
 			outSpec += "(get-model)\n";
-			Init.logger.trace("z3 specification sent to solver:");
-			Init.logger.trace(outSpec);
+			System.out.println("z3 specification sent to solver:");
+			System.out.println(outSpec);
 			out.print(outSpec);
 			out.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		String[] Cmd = {Init.Z3BuildPath + File.separator + "z3" , pathCondFileName};
-		Init.logger.trace("Running z3 solver");
+		String[] Cmd = {Config.Z3BuildPath + File.separator + "z3" , pathCondFileName};
+		System.out.println("Running z3 solver");
 		String returnedOutput = null;
 		try {
 			returnedOutput = runProcess(Cmd);
@@ -202,9 +189,9 @@ public class Solve {
 	
 	private static String runProcess(String[] command) throws Exception {
         Process pro = Runtime.getRuntime().exec(command);
-        Init.logger.trace("Returned error stream as string:");
+        System.out.println("Returned error stream as string:");
 		String errorOut = convertStreamToString(pro.getErrorStream());
-		Init.logger.trace(errorOut);
+		System.out.println(errorOut);
 		
         pro.waitFor();
         //System.out.println(command + " exitValue() " + pro.exitValue());

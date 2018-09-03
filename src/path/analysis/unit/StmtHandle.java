@@ -1,20 +1,12 @@
 package path.analysis.unit;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.javatuples.Pair;
 
 import path.analysis.assist.Database;
-import path.analysis.main.Init;
-import path.analysis.solver.Solve;
 import path.analysis.type.UnitPath;
 import soot.BooleanType;
 import soot.ByteType;
@@ -34,7 +26,7 @@ import soot.toolkits.scalar.SimpleLocalDefs;
 public class StmtHandle {
 	
 	protected final static void handleIfStmt(SootMethod method, UnitPath path, SimpleLocalDefs methodDefs, IfStmt currIfStmt) {
-		Init.logger.trace("Perform path sensitive analysis for IfStmt: " + currIfStmt.toString());
+		System.out.println("Perform path sensitive analysis for IfStmt: " + currIfStmt.toString());
 		ConditionExpr condition = (ConditionExpr) currIfStmt.getCondition();
 		Value opVal1 = condition.getOp1();
 		Value opVal2 = condition.getOp2();
@@ -45,7 +37,7 @@ public class StmtHandle {
 		boolean generateCondExpr = true;
 		
 		if(opVal1.getType() instanceof ByteType) {
-			Init.logger.trace("opVal1.getType() instanceof ByteType");
+			System.out.println("opVal1.getType() instanceof ByteType");
 			Pair<Pair<Value,Unit>,Pair<Value,Unit>> valueDefPair = ValueFind.findValuesOfByteType(method, path, methodDefs, currIfStmt, opVal1);
 			Pair<Value,Unit> left = valueDefPair.getValue0();
 			Pair<Value,Unit> right = valueDefPair.getValue1();
@@ -55,7 +47,7 @@ public class StmtHandle {
 			opVal2DefUnit = right.getValue1();
 		}
 		else if(opVal1.getType() instanceof BooleanType) {
-			Init.logger.trace("opVal1.getType() instanceof BooleanType");
+			System.out.println("opVal1.getType() instanceof BooleanType");
 			Pair<Pair<Value,Unit>,Pair<Value,Unit>> valueDefPair = ValueFind.findValuesOfBoolType(method, path, methodDefs, currIfStmt, opVal1);
 			Pair<Value,Unit> left = valueDefPair.getValue0();
 			Pair<Value,Unit> right = valueDefPair.getValue1();
@@ -104,7 +96,7 @@ public class StmtHandle {
 			}
 		}
 		else {
-			Init.logger.trace("else branch, simply invoking findKeysForLeftAndRightValues(...)");
+			System.out.println("else branch, simply invoking findKeysForLeftAndRightValues(...)");
 			ValueFind.findKeysForLRValues(methodDefs, path, currIfStmt, opVal1, opVal2);
 			opVal1DefUnit = ValueFind.getDefOfValInPath(methodDefs, path, currIfStmt, opVal1);
 			opVal2DefUnit = ValueFind.getDefOfValInPath(methodDefs, path, currIfStmt, opVal2);
@@ -114,16 +106,16 @@ public class StmtHandle {
 		String opExpr2 = null;
 		try {
 			if (opVal1 == null) {
-				Init.logger.debug("Could not resolve opVal1, so setting it to true");
+				System.out.println("Could not resolve opVal1, so setting it to true");
 				opExpr1 = "";
 			} else opExpr1 = SymbolGenerate.createZ3Expr(method,path,currIfStmt,opVal1,opVal1DefUnit);
 			
 			if (opVal2 == null) {
-				Init.logger.debug("Could not resolve opVal2, so setting it to true");
+				System.out.println("Could not resolve opVal2, so setting it to true");
 				opExpr2 = "";
 			} else opExpr2 = SymbolGenerate.createZ3Expr(method,path,currIfStmt,opVal2,opVal2DefUnit);
 		} catch (RuntimeException e) {
-			Init.logger.warn("caught exception: ", e);
+			System.out.println("caught exception: " + e);
 			return;
 		}
 		
@@ -159,7 +151,7 @@ public class StmtHandle {
             		IntentOrBundle = 2;
             else return;
             
-            Init.logger.trace("Perform path sensitive analysis for getExtra: " + currDefStmt.toString());
+            System.out.println("Perform path sensitive analysis for getExtra: " + currDefStmt.toString());
             Value arg1 = ie.getArg(0);
             Value arg2 = null;
             if(ie.getArgCount()>1)
@@ -238,7 +230,7 @@ public class StmtHandle {
 		InvokeExpr ie = currDefStmt.getInvokeExpr();
 		if (ie.getMethod().getName().equals("getAction")) {
             if (ie.getMethod().getDeclaringClass().getName().equals("android.content.Intent")) {
-                Init.logger.trace("Perform path sensitive analysis for getAction: "+ currDefStmt.toString());
+                System.out.println("Perform path sensitive analysis for getAction: "+ currDefStmt.toString());
                 if (ie instanceof InstanceInvokeExpr) {
                     InstanceInvokeExpr iie = (InstanceInvokeExpr)ie;
                     String actionRefSymbol = null;

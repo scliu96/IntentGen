@@ -5,11 +5,9 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.javatuples.Pair;
-import org.javatuples.Quartet;
 
+import path.analysis.assist.Config;
 import path.analysis.assist.Database;
-import path.analysis.config.Globals;
-import path.analysis.main.Init;
 import path.analysis.type.UnitPath;
 import soot.Body;
 import soot.BooleanType;
@@ -32,8 +30,6 @@ import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.internal.AbstractJimpleIntBinopExpr;
 import soot.jimple.internal.JCastExpr;
 import soot.jimple.internal.JVirtualInvokeExpr;
-import soot.toolkits.graph.BriefUnitGraph;
-import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.scalar.SimpleLocalDefs;
 
 public class ValueFind {
@@ -48,7 +44,7 @@ public class ValueFind {
 				for(Unit potentialCmpUnit : potentialCmpUnits)
 					if(StmtHandle.isDefInPathAndLatest(currPath, methodDefs, currUnit, local, potentialCmpUnit))
 						if(potentialCmpUnit.toString().contains("cmp")) {
-							Init.logger.trace("Found potential cmp* statement: " +potentialCmpUnit.toString());
+							System.out.println("Found potential cmp* statement: " +potentialCmpUnit.toString());
 							if(potentialCmpUnit instanceof DefinitionStmt) {
 								DefinitionStmt defStmt = (DefinitionStmt) potentialCmpUnit;
 								Value rightOp = defStmt.getRightOp();
@@ -73,18 +69,18 @@ public class ValueFind {
 				List<Unit> potentialStringEqualsUnits = methodDefs.getDefsOfAt(local,currUnit);
 				for(Unit pseUnit: potentialStringEqualsUnits)
 					if(StmtHandle.isDefInPathAndLatest(currPath, methodDefs, currUnit, local, pseUnit)) {
-						Init.logger.trace("Found potential string equal comparison statement: " + pseUnit);
+						System.out.println("Found potential string equal comparison statement: " + pseUnit);
 						if(pseUnit instanceof DefinitionStmt) {
 							DefinitionStmt defStmt = (DefinitionStmt) pseUnit;
 							if(defStmt.getRightOp() instanceof JVirtualInvokeExpr) {
 								JVirtualInvokeExpr jviExpr = (JVirtualInvokeExpr) defStmt.getRightOp();
 								if (jviExpr.getMethod().getName().equals("equals") && jviExpr.getMethod().getDeclaringClass().getName().equals("java.lang.String")) {
-									Init.logger.debug("Identified actual string equals comparison statement");
+									System.out.println("Identified actual string equals comparison statement");
 									leftVal = findOriginalVal(method,currPath,methodDefs,pseUnit,jviExpr.getBase());
 									rightVal = findOriginalVal(method,currPath,methodDefs,pseUnit,jviExpr.getArg(0));
 								}
 								if (Pattern.matches("hasExtra",jviExpr.getMethod().getName())) {
-									Init.logger.debug("Found hasExtra invocation");
+									System.out.println("Found hasExtra invocation");
 									leftVal = findOriginalVal(method,currPath,methodDefs,pseUnit,jviExpr.getBase());
 									rightVal = findOriginalVal(method,currPath,methodDefs,pseUnit,jviExpr.getArg(0));
 
@@ -185,7 +181,7 @@ public class ValueFind {
 			if(local.getType() instanceof BooleanType)
 				for(Unit pseUnit : methodDefs.getDefsOfAt(local, currUnit))
 					if(StmtHandle.isDefInPathAndLatest(currPath, methodDefs, currUnit, local, pseUnit)) {
-						Init.logger.trace("Found potential string equal comparison statement: " + pseUnit);
+						System.out.println("Found potential string equal comparison statement: " + pseUnit);
 						if(pseUnit instanceof DefinitionStmt) {
 							DefinitionStmt defStmt = (DefinitionStmt) pseUnit;
 							if(defStmt.getRightOp() instanceof JVirtualInvokeExpr) {
@@ -251,7 +247,7 @@ public class ValueFind {
 		List<Unit> castOrInvokeUnits = methodDefs.getDefsOfAt(cmpLocal, potentialCmpUnit);
 		for(Unit coiUnit : castOrInvokeUnits)
 			if(StmtHandle.isDefInPathAndLatest(currPath, methodDefs, potentialCmpUnit, cmpLocal, coiUnit)) {
-				Init.logger.trace("Foune potential cast or invoke stmt: " + coiUnit);
+				System.out.println("Foune potential cast or invoke stmt: " + coiUnit);
 				if(coiUnit instanceof DefinitionStmt) {
 					DefinitionStmt coiStmt = (DefinitionStmt) coiUnit;
 					originVal = coiStmt.getLeftOp();
@@ -260,7 +256,7 @@ public class ValueFind {
 						continue;
 					
 					if(coiStmt.getRightOp() instanceof JCastExpr) {
-						Init.logger.trace("Handling cast expression from potential API invocation");
+						System.out.println("Handling cast expression from potential API invocation");
 						JCastExpr expr = (JCastExpr) coiStmt.getRightOp();
 						if(expr.getOp() instanceof Local) {
 							Local localFromCast = (Local) expr.getOp();
@@ -287,7 +283,7 @@ public class ValueFind {
 					}
 					
 					if(coiStmt.getRightOp() instanceof ParameterRef) {
-						Init.logger.trace("Found parameter ref when searching for original value");
+						System.out.println("Found parameter ref when searching for original value");
 						if(coiStmt.getLeftOp() instanceof Local) {
 							Local prLocal = (Local) coiStmt.getLeftOp();
 							String localSymbol = SymbolGenerate.createSymbol(prLocal, method, coiStmt);
@@ -330,7 +326,7 @@ public class ValueFind {
 			if (Pattern.matches("has.*Extra",expr.getMethod().getName()))
 				if (expr.getMethod().getDeclaringClass().toString().equals("android.content.Intent"))
 					keyExtractionEnabled = true;
-			if (Globals.bundleExtraDataMethodsSet.contains(expr.getMethod().getName() )) {
+			if (Config.bundleExtraDataMethodsSet.contains(expr.getMethod().getName() )) {
 				if (expr.getMethod().getDeclaringClass().getName().equals("android.os.Bundle"))
 					keyExtractionEnabled = true;
 				if (expr.getMethod().getDeclaringClass().getName().equals("android.os.BaseBundle"))
@@ -338,7 +334,7 @@ public class ValueFind {
 			}
 			
 			if (keyExtractionEnabled) {
-				Init.logger.debug("We can extract the key from this expression");
+				System.out.println("We can extract the key from this expression");
 				if (!(expr.getArg(0) instanceof StringConstant)) {
 					if (expr.getArg(0) instanceof Local) {
 						Local keyLocal = (Local)expr.getArg(0);

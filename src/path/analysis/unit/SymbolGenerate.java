@@ -1,9 +1,6 @@
 package path.analysis.unit;
 
-import java.util.Set;
-
 import path.analysis.assist.Database;
-import path.analysis.main.Init;
 import path.analysis.type.UnitPath;
 import soot.SootMethod;
 import soot.Type;
@@ -100,7 +97,7 @@ public class SymbolGenerate {
 			opExpr = "\"" + strConst.value + "\"";
 		} else if (opVal instanceof JimpleLocal) {
 			JimpleLocal opLocal = (JimpleLocal) opVal;
-			Init.logger.trace("opLocal type: " + opLocal.getType());
+			System.out.println("opLocal type: " + opLocal.getType());
 
 			String symbol = null;
 			DefinitionStmt defStmt = (DefinitionStmt) defUnit;
@@ -152,7 +149,7 @@ public class SymbolGenerate {
 					break;
 				default:
 					// object is an arbitrary type so we'll mark it as null or not null
-					Init.logger.debug("Creating object with symbol: " + symbol + " for Local " + opLocal + " in " + method);
+					System.out.println("Creating object with symbol: " + symbol + " for Local " + opLocal + " in " + method);
 					newDecl = "(declare-const " + symbol + " Object )";
 					opExpr = symbol;
 			}
@@ -195,12 +192,12 @@ public class SymbolGenerate {
 				condExpr = "(assert (<= " + opExpr1 + " " + opExpr2 + "))";
 				break;
 		}
-		Init.logger.trace("z3 conditional expr: " + condExpr);
+		System.out.println("z3 conditional expr: " + condExpr);
 
 		if (condExpr == null) {
-            Init.logger.debug("currExpr should not be null");
-            Init.logger.debug("opExpr1: " + opExpr1);
-            Init.logger.debug("opExpr2: " + opExpr2);
+			System.out.println("currExpr should not be null");
+			System.out.println("opExpr1: " + opExpr1);
+			System.out.println("opExpr2: " + opExpr2);
             throw new RuntimeException("currExpr should not be null");
         }
 		returnExpr = condExpr;

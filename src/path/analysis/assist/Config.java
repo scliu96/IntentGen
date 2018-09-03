@@ -21,8 +21,8 @@ public class Config {
 	public final static boolean parallelEnabled = false;
 	public final static boolean pathLimitEnables = true;
 	
-	public final static int finalPathsLimit = 1000;
-	public final static int methodPointsLimit = 1000;
+	public final static int pathsLimitInOneMethod = 1000;
+	public final static int analyzedMethodLimit = 1000;
 	
 	private static String[] androidPkgPrefixes = {"android.","com.android.","dalvik.","java.","javax.","junit.","org.apache.","org.json.","org.w3c.dom.","org.xml.sax","org.xmlpull."};
 	public static Set<String> androidPkgPrefixesSet = new LinkedHashSet<String>(Arrays.asList(androidPkgPrefixes));

@@ -10,9 +10,6 @@ import java.util.Stack;
 import path.analysis.assist.Config;
 import path.analysis.assist.Database;
 import path.analysis.assist.Timer;
-import path.analysis.main.Init;
-import path.analysis.solver.Solve;
-import path.analysis.type.MethodPoint;
 import path.analysis.type.UnitPath;
 import soot.Body;
 import soot.PatchingChain;
@@ -29,85 +26,88 @@ import soot.toolkits.scalar.SimpleLocalDefs;
 
 public class PathAnalysis {
 	
-	public static void analysis() throws Exception {
-		for(MethodPoint methodPoint : Database.methodPointsMap.values()) {
-			SootMethod method = methodPoint.entryMethod;
-			Body b = method.getActiveBody();
-			PatchingChain<Unit> units = b.getUnits();
-			BriefUnitGraph ug = new BriefUnitGraph(b);
-			
-			if(units.isEmpty())
-				continue;
-			Unit startingUnit = units.getFirst();
-			Stack<Unit> workUnits = new Stack<Unit>();
-			workUnits.push(startingUnit);
-			Stack<UnitPath> workPaths = new Stack<UnitPath>();
-			UnitPath newUp = new UnitPath(startingUnit);
-			workPaths.push(newUp);
-			Set<UnitPath> finalPaths = new LinkedHashSet<UnitPath>();
-			while(!workUnits.isEmpty()) {
-				if(workPaths.size() != workUnits.size())
-					throw new Exception("workUnits size is different from workPaths size");
-				
-				Unit currUnit = workUnits.pop();
-				UnitPath currPath = workPaths.pop();
-				if(ug.getSuccsOf(currUnit).isEmpty()) {
-					Init.logger.trace("A final path :" + currPath.toUnitString());
-					if(finalPaths.size() < Config.finalPathsLimit)
-						finalPaths.add(currPath);
-				}
-				
-				for(Unit succUnit : ug.getSuccsOf(currUnit)) {
-					if(currPath.path.contains(succUnit)){
-						Init.logger.trace("Loop detected while analyze method : "+ method.getName());
-						if(currPath.path.indexOf(succUnit) == currPath.path.size()-1)
-							continue;
-						workUnits.push(succUnit);
-						workPaths.push(currPath);
-						continue;
-					}
-					Init.logger.trace("Fork the following path on unit " + succUnit);
-					UnitPath newPath = new UnitPath(currPath,succUnit);
-					workUnits.push(succUnit);
-					workPaths.push(newPath);
-					Init.logger.trace("WorkingUnits size now is " + workUnits.size());
-				}
-			}
-			methodPoint.unitPaths = finalPaths;
-			analyzeUnitPathInMethod(methodPoint);
-		}
+	public static void analysis() throws Exception{
+		long innerPathsNum = 0;
+		for(SootMethod m : Database.analyzedMethods)
+			innerPathsNum += analyzeInnerPaths(m);
+		Timer.tempOut += "Find " + innerPathsNum + " inner-method paths in ";
+		Timer.printSystemTime();
+		Timer.tempOut += "Average " + (float)innerPathsNum/(float)Database.analyzedMethods.size() + " in one method \n";
 		
-		int totalInnerMethodPath = 0;
-        for(MethodPoint mp :Database.methodPointsMap.values())
-        		totalInnerMethodPath += mp.unitPaths.size();
-        Timer.tempOut += "Analyze " + Database.methodPointsMap.size() + " methods\n";
-        Timer.tempOut += "Find " + totalInnerMethodPath +" inner-method paths\n";
-        Timer.tempOut += "Find " + (float)totalInnerMethodPath/(float)Database.methodPointsMap.size() + " inner-method paths in average in one method\n";
+		for(SootMethod m : Database.analyzedMethods)
+			symbolGenInnerPaths(m);
+        Timer.tempOut += "Generate Symbols for inner-method paths in ";
         Timer.printSystemTime();
         
 		int totalInterMethodPath = 0;
-		for(SootMethod m : Database.entryPoints) {
-			Set<UnitPath> ups = findFinalPaths(m);
-			totalInterMethodPath += ups.size();
-			Database.methodPathsMap.put(m, ups);
+		for(SootMethod m : Database.entryMethods) {
+			Set<UnitPath> interPaths = analyzeInterPaths(m);
+			totalInterMethodPath += interPaths.size();
+			Database.interPathsMap.put(m, interPaths);
 		}
 		Timer.tempOut += "Find " + totalInterMethodPath + " inter-method paths in ";
 		Timer.printSystemTime();
-		
-		for(SootMethod m : Database.entryPoints)
-			for(UnitPath currPath : Database.methodPathsMap.get(m))
+		/*
+		for(SootMethod m : Database.entryMethods)
+			for(UnitPath currPath : Database.interPathsMap.get(m))
 				Solve.runSolvingPhase(m, currPath);
 		Timer.tempOut += "Find " + Database.finalPathsMap.size() + " feasible paths in ";
-		Timer.printSystemTime();
+		Timer.printSystemTime();*/
 	}
 	
-	private static void analyzeUnitPathInMethod(MethodPoint methodPoint) {
-		SootMethod method = methodPoint.entryMethod;
-		Set<UnitPath> unitPaths = methodPoint.unitPaths;
-		for(UnitPath currPath : unitPaths) {
+	private static int analyzeInnerPaths(SootMethod method) throws Exception {
+		Body b = method.getActiveBody();
+		PatchingChain<Unit> units = b.getUnits();
+		BriefUnitGraph ug = new BriefUnitGraph(b);
+		
+		if(units.isEmpty())
+			return 0;
+		Unit startingUnit = units.getFirst();
+		Stack<Unit> workUnits = new Stack<Unit>();
+		workUnits.push(startingUnit);
+		Stack<UnitPath> workPaths = new Stack<UnitPath>();
+		UnitPath newUp = new UnitPath(startingUnit);
+		workPaths.push(newUp);
+		
+		Set<UnitPath> paths = new LinkedHashSet<UnitPath>();
+		while(!workUnits.isEmpty()) {
+			if(workPaths.size() != workUnits.size())
+				throw new Exception("workUnits size is different from workPaths size");
+			
+			Unit currUnit = workUnits.pop();
+			UnitPath currPath = workPaths.pop();
+			if(ug.getSuccsOf(currUnit).isEmpty()) {
+				System.out.println("A inner-method path :\n" + currPath.toUnitString());
+				if(paths.size() < Config.pathsLimitInOneMethod)
+					paths.add(currPath);
+			}
+			
+			for(Unit succUnit : ug.getSuccsOf(currUnit)) {
+				if(currPath.path.contains(succUnit)){
+					System.out.println("Loop detected while analyze method : "+ method.getName());
+					if(currPath.path.indexOf(succUnit) == currPath.path.size()-1)
+						continue;
+					workUnits.push(succUnit);
+					workPaths.push(currPath);
+					continue;
+				}
+				System.out.println("Fork the following path on unit: " + succUnit);
+				UnitPath newPath = new UnitPath(currPath,succUnit);
+				workUnits.push(succUnit);
+				workPaths.push(newPath);
+				System.out.println("WorkingUnits size now is: " + workUnits.size());
+			}
+		}
+		Database.innerPathsMap.put(method, paths);
+		return paths.size();
+	}
+	
+	private static void symbolGenInnerPaths(SootMethod method) {
+		Set<UnitPath> innerPaths = Database.innerPathsMap.get(method);
+		for(UnitPath currPath : innerPaths) {
 			for(int i = 0; i<currPath.path.size(); i++) {
 				Unit currUnitInPath = currPath.path.get(i);
-				if(!unitNeedsAnalysis(currUnitInPath))
+				if(!unitNeedsGen(currUnitInPath))
 					continue;
 				UnitGraph unitGraph = null;
 				SimpleLocalDefs defs = null;
@@ -115,7 +115,7 @@ public class PathAnalysis {
 					unitGraph = new ExceptionalUnitGraph(method.getActiveBody());
 					defs = new SimpleLocalDefs(unitGraph);
 				}
-				else Init.logger.warn("method " + method.getName() + " has no active body");
+				else System.out.println("method " + method.getName() + " has no active body");
 				
 				try {
 					Stmt currStmtInPath = (Stmt) currUnitInPath;
@@ -125,7 +125,7 @@ public class PathAnalysis {
 						StmtHandle.handleIntentGetExtraStmt(method, currPath, defs, (DefinitionStmt) currStmtInPath);
 						StmtHandle.handleIntentGetActionStmt(method, currPath, defs, (DefinitionStmt) currStmtInPath);
 					}
-					else Init.logger.warn("Not including condition for " + currUnitInPath + " to path constraint");
+					else System.out.println("Not including condition for " + currUnitInPath + " to path constraint");
 				}catch (NullPointerException e) {
 	                e.printStackTrace();
 	            }
@@ -133,7 +133,7 @@ public class PathAnalysis {
 		}
 	}
 	
-	private static boolean unitNeedsAnalysis(Unit unit) {
+	private static boolean unitNeedsGen(Unit unit) {
 		if (unit instanceof InvokeStmt) {
 			InvokeStmt stmt = (InvokeStmt) unit;
 			if ( stmt.getInvokeExpr().getMethod().getName().equals("d") )
@@ -142,21 +142,23 @@ public class PathAnalysis {
 		return true;
 	}
 	
-	private static Set<UnitPath> findFinalPaths(SootMethod targetMethod) {
-		MethodPoint mp = Database.methodPointsMap.get(targetMethod);
-		Set<UnitPath> finalPaths = new LinkedHashSet<UnitPath>();
-		for(UnitPath path : mp.unitPaths) {
-			//System.out.println(path.toUnitString());
+	private static Set<UnitPath> analyzeInterPaths(SootMethod m) {
+		Map<Unit,SootMethod> nextMethods = Database.nextMethodsMap.get(m);
+		Set<UnitPath> innerPaths = Database.innerPathsMap.get(m);
+		
+		Set<UnitPath> interPaths = new LinkedHashSet<UnitPath>();
+		for(UnitPath path : innerPaths) {
+			//use callUnits map to restore for if stmt conditions
 			Map<Unit,Unit> callUnits = new LinkedHashMap<Unit,Unit>();
 			for(Unit unit : path.path)
-				if(mp.nextMethods.containsKey(unit))
+				if(Database.nextMethodsMap.get(m).containsKey(unit))
 					callUnits.put(unit, path.path.get(path.path.indexOf(unit)+1));
 			List<UnitPath> workPaths = new LinkedList<UnitPath>();
 			List<UnitPath> analyzedPaths = new LinkedList<UnitPath>();
+			
 			workPaths.add(path);
 			while(!workPaths.isEmpty()) {
 				UnitPath nowPath = workPaths.get(0);
-				//System.out.println(nowPath.toUnitString());
 				workPaths.remove(nowPath);
 				analyzedPaths.add(nowPath);
 				int callUnitNum = 0;
@@ -165,13 +167,14 @@ public class PathAnalysis {
 						if(nowPath.path.get(nowPath.path.indexOf(callUnit)+1).equals(callUnits.get(callUnit))) {
 							callUnitNum++;
 							Set<UnitPath> conPaths = null;
-							if(Database.methodPathsMap.containsKey(mp.nextMethods.get(callUnit)))
-								conPaths = Database.methodPathsMap.get(mp.nextMethods.get(callUnit));
-							else if(Database.methodPointsMap.containsKey(mp.nextMethods.get(callUnit))){
-								conPaths = findFinalPaths(mp.nextMethods.get(callUnit));
-								Database.methodPathsMap.put(mp.nextMethods.get(callUnit), conPaths);
+							if(Database.interPathsMap.containsKey(nextMethods.get(callUnit)))
+								conPaths = Database.interPathsMap.get(nextMethods.get(callUnit));
+							else if(Database.innerPathsMap.containsKey(nextMethods.get(callUnit))){
+								conPaths = analyzeInterPaths(nextMethods.get(callUnit));
+								Database.interPathsMap.put(nextMethods.get(callUnit), conPaths);
 							}
 							else break;
+							
 							for(UnitPath conPath : conPaths) {
 								UnitPath newPath = connectPath(nowPath,conPath,callUnit);
 								if(!analyzedPaths.contains(newPath))
@@ -182,12 +185,11 @@ public class PathAnalysis {
 					}
 				}
 				if(callUnitNum == 0) {
-					//System.out.println(nowPath.toUnitString());
-					finalPaths.add(nowPath);
+					interPaths.add(nowPath);
 				}
 			}
 		}
-		return finalPaths;
+		return interPaths;
 	}
 	
 	private static UnitPath connectPath(UnitPath callPath, UnitPath calledPath, Unit callUnit) {

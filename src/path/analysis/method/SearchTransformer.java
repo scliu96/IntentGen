@@ -12,7 +12,7 @@ public class SearchTransformer extends BodyTransformer{
 	@Override
 	protected void internalTransform(final Body b,String phaseName,final Map<String,String> options){
 		if(methodIsNeed(b.getMethod()))
-			Database.entryPoints.add(b.getMethod());
+			Database.entryMethods.add(b.getMethod());
 	}
 	
 	private boolean methodIsNeed(SootMethod m){
