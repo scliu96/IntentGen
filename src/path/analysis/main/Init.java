@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
 
-import org.xmlpull.v1.XmlPullParserException;
-
 import path.analysis.assist.*;
 import path.analysis.method.MethodAnalysis;
 import path.analysis.method.SearchTransformer;
@@ -19,9 +17,10 @@ import soot.options.Options;
 
 public class Init{
 	
-	private static void sootInit() throws IOException, XmlPullParserException{
+	private static void sootInit() throws IOException{
 		SetupApplication app = new SetupApplication(Config.androidJarPath,Config.apkPath);
-		app.calculateSourcesSinksEntrypoints(Config.sourcesAndSinkFile);
+		app.setCallbackFile("AndroidCallbacks.txt");
+		app.constructCallgraph();
 		soot.G.reset();
 		Options.v().set_src_prec(Options.src_prec_apk);
 		Options.v().set_android_jars(Config.androidJarPath);
@@ -30,10 +29,9 @@ public class Init{
 		
 		Options.v().set_whole_program(true);
 		Options.v().set_allow_phantom_refs(true);
-		//danger option which will pause many methods
-		//Options.v().set_no_bodies_for_excluded(true);
 		Scene.v().loadNecessaryClasses();
-		SootMethod entryPoint = app.getEntryPointCreator().createDummyMain();
+		
+		SootMethod entryPoint = app.getDummyMainMethod();
 		Options.v().set_main_class(entryPoint.getSignature());
 		Scene.v().setEntryPoints(Collections.singletonList(entryPoint));
 	}
@@ -61,7 +59,7 @@ public class Init{
 				sootInit();
 				dataInit();
 				Timer.tempOut += "Begin\n";
-				
+				/*
 				Timer.printSystemTime();
 				SearchTransformer mySearch = new SearchTransformer();
 		        PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter",mySearch));
@@ -83,7 +81,7 @@ public class Init{
 		        PathAnalysis.analysis();
 		        
 		        tempOut.print(Timer.tempOut);
-				tempOut.close();
+				tempOut.close();*/
 			}catch (FileNotFoundException e) {
 				continue;
 			}

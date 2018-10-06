@@ -7,16 +7,16 @@ import java.util.List;
 import java.util.Set;
 
 public class Config {
-	public final static String androidJarPath = "/Users/apple/Documents/Eclipse/android-platforms-master";
-	public final static String sourcesAndSinkFile = "/Users/apple/Documents/Eclipse/soot-infoflow-android/SourcesAndSinks.txt";
+	public final static String androidJarPath = "/Users/sc/Tools/android-sdk-macosx/platforms/";
+	public final static String sourcesAndSinkFile = "SourcesAndSinks.txt";
 	
-	public final static String Z3BuildPath = "/Users/apple/Documents/z3-master/build";
+	public final static String Z3BuildPath = "z3-master/build";
 	public final static String Z3_RUNTIME_SPECS_DIR = "z3_runtime_specs";
 	
 	public static List<String> apkNames = new LinkedList<String>();
-	public static String apkSourcePath = "/Users/apple/Documents/AndroidStudio/release/";
-	public static String apkPath = "/Users/apple/Documents/AndroidStudio/release/";
-	public static String outputPath = "/Users/apple/Desktop/";
+	public static String apkSourcePath = "apks/";
+	public static String apkPath = "";
+	public static String outputPath = "outputs/";
 	
 	public final static boolean parallelEnabled = false;
 	public final static boolean pathLimitEnables = true;
