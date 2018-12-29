@@ -1,3 +1,4 @@
+
 package path.analysis.main;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -13,14 +14,15 @@ import soot.Scene;
 import soot.SootMethod;
 import soot.Transform;
 import soot.jimple.infoflow.android.SetupApplication;
+import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.options.Options;
 
 public class Init{
 	
 	private static void sootInit() throws IOException{
 		SetupApplication app = new SetupApplication(Config.androidJarPath,Config.apkPath);
-		app.setCallbackFile("AndroidCallbacks.txt");
-		app.constructCallgraph();
+		app.setCallbackFile(Config.androidCallBackFile);
+		
 		soot.G.reset();
 		Options.v().set_src_prec(Options.src_prec_apk);
 		Options.v().set_android_jars(Config.androidJarPath);
@@ -31,9 +33,9 @@ public class Init{
 		Options.v().set_allow_phantom_refs(true);
 		Scene.v().loadNecessaryClasses();
 		
-		SootMethod entryPoint = app.getDummyMainMethod();
-		Options.v().set_main_class(entryPoint.getSignature());
-		Scene.v().setEntryPoints(Collections.singletonList(entryPoint));
+		//SootMethod entryPoint = app.getDummyMainMethod();
+		//Options.v().set_main_class(entryPoint.getSignature());
+		//Scene.v().setEntryPoints(Collections.singletonList(entryPoint));
 	}
 	
 	private static void dataInit() {
@@ -59,7 +61,7 @@ public class Init{
 				sootInit();
 				dataInit();
 				Timer.tempOut += "Begin\n";
-				/*
+				
 				Timer.printSystemTime();
 				SearchTransformer mySearch = new SearchTransformer();
 		        PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter",mySearch));
@@ -81,7 +83,7 @@ public class Init{
 		        PathAnalysis.analysis();
 		        
 		        tempOut.print(Timer.tempOut);
-				tempOut.close();*/
+				tempOut.close();
 			}catch (FileNotFoundException e) {
 				continue;
 			}

@@ -7,8 +7,9 @@ import java.util.List;
 import java.util.Set;
 
 public class Config {
-	public final static String androidJarPath = "/Users/sc/Tools/android-sdk-macosx/platforms/";
-	public final static String sourcesAndSinkFile = "SourcesAndSinks.txt";
+	public final static String androidJarPath = "/Users/sc/Tools/Android/android-platforms-master/";
+	public final static String sourcesAndSinkFile = "config/SourcesAndSinks.txt";
+	public final static String androidCallBackFile = "config/AndroidCallbacks.txt";
 	
 	public final static String Z3BuildPath = "z3-master/build";
 	public final static String Z3_RUNTIME_SPECS_DIR = "z3_runtime_specs";
