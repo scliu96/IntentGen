@@ -1,0 +1,57 @@
+<android.location.Location: double getLatitude()> -> _SOURCE_
+<android.location.Location: double getLongitude()> -> _SOURCE_
+
+<android.telephony.TelephonyManager: java.lang.String getDeviceId()> android.permission.READ_PHONE_STATE -> _SOURCE_
+<android.telephony.TelephonyManager: java.lang.String getSubscriberId()> android.permission.READ_PHONE_STATE -> _SOURCE_
+<android.telephony.TelephonyManager: java.lang.String getSimSerialNumber()> android.permission.READ_PHONE_STATE -> _SOURCE_
+<android.telephony.TelephonyManager: java.lang.String getLine1Number()> android.permission.READ_PHONE_STATE -> _SOURCE_
+
+<android.os.Handler: android.os.Message obtainMessage()> -> _SOURCE_
+<android.os.Handler: android.os.Message obtainMessage(int,int,int)> -> _SOURCE_
+<android.os.Handler: android.os.Message obtainMessage(int,int,int,java.lang.Object)> -> _SOURCE_
+<android.os.Handler: android.os.Message obtainMessage(int)> -> _SOURCE_
+<android.os.Handler: android.os.Message obtainMessage(int,java.lang.Object)> -> _SOURCE_
+
+<java.io.OutputStream: void write(byte[])> -> _SINK_
+<java.io.OutputStream: void write(byte[],int,int)> -> _SINK_
+<java.io.OutputStream: void write(int)> -> _SINK_
+
+<java.io.FileOutputStream: void write(byte[])> -> _SINK_
+<java.io.FileOutputStream: void write(byte[],int,int)> -> _SINK_
+<java.io.FileOutputStream: void write(int)> -> _SINK_
+
+<java.io.Writer: void write(char[])> -> _SINK_
+<java.io.Writer: void write(char[],int,int)> -> _SINK_
+<java.io.Writer: void write(int)> -> _SINK_
+<java.io.Writer: void write(java.lang.String)> -> _SINK_
+<java.io.Writer: void write(java.lang.String,int,int)> -> _SINK_
+
+<java.net.URL: void set(java.lang.String,java.lang.String,int,java.lang.String,java.lang.String)> -> _SINK_
+<java.net.URL: void set(java.lang.String,java.lang.String,int,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String)> -> _SINK_
+
+<java.net.URLConnection: void setRequestProperty(java.lang.String,java.lang.String)> -> _SINK_
+<android.telephony.SmsManager: void sendTextMessage(java.lang.String,java.lang.String,java.lang.String,android.app.PendingIntent,android.app.PendingIntent)> android.permission.SEND_SMS -> _SINK_ 
+<android.telephony.SmsManager: void sendDataMessage(java.lang.String,java.lang.String,short,byte[],android.app.PendingIntent,android.app.PendingIntent)> android.permission.SEND_SMS -> _SINK_ 
+<android.telephony.SmsManager: void sendMultipartTextMessage(java.lang.String,java.lang.String,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList)> android.permission.SEND_SMS -> _SINK_ 
+<android.os.Handler: boolean sendMessage(android.os.Message)> -> _SINK_
+<android.content.SharedPreferences$Editor: android.content.SharedPreferences$Editor putBoolean(java.lang.String,boolean)> -> _SINK_
+<android.content.SharedPreferences$Editor: android.content.SharedPreferences$Editor putFloat(java.lang.String,float)> -> _SINK_
+<android.content.SharedPreferences$Editor: android.content.SharedPreferences$Editor putInt(java.lang.String,int)> -> _SINK_
+<android.content.SharedPreferences$Editor: android.content.SharedPreferences$Editor putLong(java.lang.String,long)> -> _SINK_
+<android.content.SharedPreferences$Editor: android.content.SharedPreferences$Editor putString(java.lang.String,java.lang.String)> -> _SINK_
+
+<android.bluetooth.BluetoothAdapter: java.lang.String getAddress()> -> _SOURCE_
+<android.net.wifi.WifiInfo: java.lang.String: getMacAddress()> -> _SOURCE_
+<java.util.Locale: java.lang.String getCountry()> -> _SOURCE_
+<android.net.wifi.WifiInfo: java.lang.String getSSID()> -> _SOURCE_
+<android.telephony.gsm.GsmCellLocation: int getCid()> -> _SOURCE_
+<android.telephony.gsm.GsmCellLocation: int getLac()> -> _SOURCE_
+<android.location.Location: double getLongitude()> -> _SOURCE_
+<android.location.Location: double getLatitude()> -> _SOURCE_
+<android.accounts.AccountManager: android.accounts.Account[] getAccounts()> -> _SOURCE_
+<java.util.Calendar: java.util.TimeZone getTimeZone()> -> _SOURCE_
+<android.provider.Browser: android.database.Cursor getAllBookmarks()> -> _SOURCE_
+<android.provider.Browser: android.database.Cursor getAllVisitedUrls()> -> _SOURCE_
+
+<android.content.ContentResolver: android.database.Cursor query(android.net.Uri,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String)> -> _SOURCE_
+<android.content.ContentResolver: android.database.Cursor query(android.net.Uri,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String,android.os.CancellationSignal)> -> _SOURCE_

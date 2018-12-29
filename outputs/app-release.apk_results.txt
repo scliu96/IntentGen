@@ -2,11 +2,10 @@ app-release.apk
 Init
 0 ms
 Begin
-11249 ms
-Find 4 entryMethods in 37535 ms
+11172 ms
+Find 4 entryMethods in 29454 ms
 Find 12 methods need to be analyzed in 0 ms
 Find 16 inner-method paths in 8 ms
 Average 1.3333334 in one method 
-Generate Symbols for inner-method paths in 10 ms
+Generate Symbols for inner-method paths in 12 ms
 Find 12 inter-method paths in 1 ms
-

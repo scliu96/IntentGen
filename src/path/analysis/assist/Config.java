@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 public class Config {
-	public final static String androidJarPath = "/Users/sc/Tools/Android/android-platforms-master/";
+	public final static String androidJarPath = "config/android-platforms/";
 	public final static String sourcesAndSinkFile = "config/SourcesAndSinks.txt";
 	public final static String androidCallBackFile = "config/AndroidCallbacks.txt";
 	

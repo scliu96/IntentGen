@@ -1,4 +1,18 @@
-# ServiceLeak
-使用方法：
-在 AndroidInstrument.java 文件中将 sootJarParh，androidJarPath，APKPath 分别改为本机上的 soot.jar 包地址，android-platforms-master 文件夹地址，要测试的 APK 地址
-之后点击运行，获得的 result 变量就是所要求到的结果，其中每个 MyIntent 的 Property 属性就是一个关于 key-type 的 map，在终端已经输出一次
+# Intent Generator
+
+## 环境配置
+首先项目要依赖于lib文件夹下的所有jar包，主要使用的是soot和FlowDroid这两个工具。项目内的设置信息都在Config.java中，其中包括了安卓平台包地址、FlowDroid的配置文件、z3的运行环境，以及输入apk的路径和输出文件的地址。
+
+## 方法
+整个项目以一个安卓应用程序APK作为输入
+
+* 构建整个程序的Call Graph，同时指定程序分析的入口方法entrypoint method（当前设定为安卓服务的生命周期函数）
+
+* 在Soot转换得到的中间代码Jimple上执行流敏感、上下文敏感、对象敏感、路径敏感的静态符号执行，分析所有可能的执行路径（剪枝以简化）
+
+* 用z3约束求解器对所有路径进行求解，得到可行的运行路径
+
+* 对于可行路径进行数据流分析，分析可以得到的每个Intent变量的属性
+
+## 运行结果
+输出文件表示了执行过程中每个部分的执行时间，对于每一个APK文件的执行结果保存在Database.java中。
